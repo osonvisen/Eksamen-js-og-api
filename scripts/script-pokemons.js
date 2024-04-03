@@ -81,21 +81,36 @@ function buildPokemons() {
     });
     setTimeout(assembleCards, 700);
 }
-
+function shufflePokemons(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 function assembleCards() {
+    // Bruker Fisher-Yates-metoden til å blande hunderasene i tilfeldig rekkefølge
+    shufflePokemons(pokemons);
     pokemons.forEach((pokemon) => {
-        display.innerHTML = "Her skal pokemonene vises";
         const pokemonCard = document.createElement("div");
         pokemonCard.style.display = "flex";
         pokemonCard.style.flexDirection = "column";
+        pokemonCard.style.width = "150px";
         pokemonCard.classList.add("pokemon-card");
         const imgDiv = document.createElement("div");
-        imgDiv.innerHTML = `<img src="${pokemons[0].image}" alt="${pokemons[0].name}">`;
+        imgDiv.innerHTML = `<img src="${pokemon.image}" alt="${pokemons[0].name}" style="width: 150px">`;
+        imgDiv.style.width = "100%";
         const imgText = document.createElement("div");
-        imgText.innerHTML = `<p>${pokemons[0].name}</p>`;
-        imgText.innerHTML += `<p>${pokemons[0].type}</p>`;
+        imgText.innerHTML = `<p>Navn: ${pokemon.name}</p>`;
+        imgText.innerHTML += `<p>Type: ${pokemon.type}</p>`;
+        const likeBtn = document.createElement("button");
+        likeBtn.innerHTML = "Liker";
+        const editBtn = document.createElement("button");
+        editBtn.innerHTML = "Rediger";
+        const delBtn = document.createElement("button");
+        delBtn.innerHTML = "Slett";
 
-        pokemonCard.append(imgDiv, imgText);
+        pokemonCard.append(imgDiv, imgText, likeBtn, editBtn, delBtn);
         display.appendChild(pokemonCard);
     });
 }
