@@ -1,67 +1,51 @@
 // Finner alle pokemons fra apiet og leggerer de i en liste
 let pokemons = []; // Her lagrer vi de ferdige pokemons, som skal være vårt 'api'
 let pokeContainer = []; // Mellomlager
+let favorites = []; // Her lagrer vi de favorittene brukeren har valgt
+let types = []; // Her lagrer vi typene vi henter ut
 let display = document.querySelector(".display");
-const types = [
-    "bug",
-    "dark",
-    "dragon",
-    "electric",
-    "fairy",
-    "fighting",
-    "fire",
-    "flying",
-    "ghost",
-    "grass",
-    "ground",
-    "ice",
-    "normal",
-    "poison",
-    "psychic",
-    "rock",
-    "steel",
-    "water",
-];
+// Lager et array med alle typene pokemons
 
-catchEmAll();
+// Sjekker om det ligger noe i localStorage
+readLocalStorage();
+function readLocalStorage() {
+    if (localStorage.getItem("storedFavorites")) {
+        favorites = JSON.parse(localStorage.getItem("storedFavorites"));
+        console.log("Hentet fra favoritter localStorage: ");
+    } else {
+        console.log("Ingen favoritter funnet i localStorage");
+    }
+    if (localStorage.getItem("storedPokemons")) {
+        pokemons = JSON.parse(localStorage.getItem("storedPokemons"));
+        console.log("Hentet pokemons fra localStorage: ");
+        assembleCards();
+    } else {
+        catchEmAll();
+    }
+}
+
+// Fanger 50 tilfeldige pokemons
 async function catchEmAll() {
-    let collection = [];
+    let collection = []; // Her legger vi rådataene fra apiet
     try {
-        let y = 3; // Antall pokemons vi henter fra hver type
-        for (let i = 0; types.length > i; i++) {
-            const response = await fetch(
-                `https://pokeapi.co/api/v2/type/${types[i]}`
-            );
-            const data = await response.json();
-            collection = data.pokemon;
-
-            // Laster ned bare to pokemons fra disse typene.
-            // Da kommer vi til 50 totalt.
-            if (i === 4 || i === 8 || i === 12 || i === 16) {
-                y = 2;
-            } else {
-                y = 3;
-            }
-            // Henter et tilfeldig tall mellom 0 og lengden på collection
-            // Får derfor tilfeldige pokemons i hver type
-            for (let j = 0; y > j; j++) {
-                let random = Math.floor(Math.random() * collection.length - 1);
-                pokeContainer.push({
-                    pokeType: `${types[i]}`,
-                    pokieUrl: collection[random],
-                });
-            }
-        }
-        buildPokemons();
+        // Henter pokemons fra api
+        const response = await fetch(
+            "https://pokeapi.co/api/v2/pokemon?limit=50"
+        );
+        const data = await response.json();
+        pokeContainer = data.results;
+        setTimeout(buildPokemons(), 500);
     } catch (error) {
         console.error("Sliter med å laste ned pokemons..! " + error);
     }
 }
-// Funksjon som setter sammen kortene våre
+// Fetcher og sorterer detaljene vi trenger om pokemonene
+// og legger dem i pokemons, som vi skal bruke videre.
 function buildPokemons() {
+    console.log("Bygger pokemonene");
     pokeContainer.forEach(async (pokemon) => {
         try {
-            const response = await fetch(pokemon.pokieUrl.pokemon.url);
+            const response = await fetch(pokemon.url);
             const data = await response.json();
             // Henter ut typen, navnet og bildet på pokemonen
             let picture;
@@ -71,7 +55,7 @@ function buildPokemons() {
                 picture = data.sprites.front_shiny;
             }
             pokemons.push({
-                type: pokemon.pokeType,
+                type: data.types[0].type.name,
                 image: picture,
                 name: data.name,
             });
@@ -79,38 +63,57 @@ function buildPokemons() {
             console.error("Sliter med å sette sammen pokemons..! " + error);
         }
     });
+    // setTimeout((pokemons = shufflePokemons()), 300);
+    console.log("Lagrer..");
+    setTimeout(storePokemons, 300);
     setTimeout(assembleCards, 700);
 }
-function shufflePokemons(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+
+function storePokemons(key, array) {
+    if (key === undefined || key == "") {
+        key = "storedPokemons";
+        array = pokemons;
     }
-    return array;
+    localStorage.setItem(key, JSON.stringify(array));
+    console.log("Lagret i localStorage: ");
 }
+
 function assembleCards() {
-    // Bruker Fisher-Yates-metoden til å blande hunderasene i tilfeldig rekkefølge
-    shufflePokemons(pokemons);
-    pokemons.forEach((pokemon) => {
+    pokemons.forEach((pokemon, index) => {
         const pokemonCard = document.createElement("div");
         pokemonCard.style.display = "flex";
         pokemonCard.style.flexDirection = "column";
         pokemonCard.style.width = "150px";
-        pokemonCard.classList.add("pokemon-card");
+        pokemonCard.style.backgroundColor = "rgb(173, 216, 173, .4)";
+        pokemonCard.style.padding = "7px";
+        pokemonCard.style.borderRadius = "10px";
         const imgDiv = document.createElement("div");
         imgDiv.innerHTML = `<img src="${pokemon.image}" alt="${pokemons[0].name}" style="width: 150px">`;
         imgDiv.style.width = "100%";
         const imgText = document.createElement("div");
         imgText.innerHTML = `<p>Navn: ${pokemon.name}</p>`;
         imgText.innerHTML += `<p>Type: ${pokemon.type}</p>`;
-        const likeBtn = document.createElement("button");
-        likeBtn.innerHTML = "Liker";
+        const storeBtn = document.createElement("button");
+        storeBtn.innerHTML = "Lagre";
+        storeBtn.addEventListener("click", () => {
+            favorites.push(pokemon);
+            console.log(favorites);
+            storePokemons("storedFavorites", favorites);
+        });
         const editBtn = document.createElement("button");
         editBtn.innerHTML = "Rediger";
         const delBtn = document.createElement("button");
         delBtn.innerHTML = "Slett";
+        delBtn.style.backgroundColor = "red";
+        delBtn.addEventListener("click", () => {
+            pokemons.splice(index, 1);
 
-        pokemonCard.append(imgDiv, imgText, likeBtn, editBtn, delBtn);
+            storePokemons();
+            display.innerHTML = "";
+            assembleCards();
+        });
+
+        pokemonCard.append(imgDiv, imgText, storeBtn, editBtn, delBtn);
         display.appendChild(pokemonCard);
     });
 }
