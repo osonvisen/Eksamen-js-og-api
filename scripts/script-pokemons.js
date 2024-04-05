@@ -4,6 +4,7 @@ let pokeContainer = []; // Mellomlager
 let favorites = []; // Her lagrer vi de favorittene brukeren har valgt
 let types = []; // Her lagrer vi typene vi henter ut
 let display = document.querySelector(".display");
+let sortMenu = document.querySelector("#sort-by-type");
 // Lager et array med alle typene pokemons
 
 // Sjekker om det ligger noe i localStorage
@@ -172,4 +173,25 @@ function assembleCards() {
         pokemonCard.append(imgDiv, imgText, storeBtn, editBtn, delBtn);
         display.appendChild(pokemonCard);
     });
+    findTypes();
+}
+function findTypes() {
+    // Lager et array med alle typene pokemons
+    pokemons.forEach((pokemon) => {
+        if (!types.includes(pokemon.type)) {
+            types.push(pokemon.type);
+        }
+    });
+    console.log(types);
+    sortPokemons("grass");
+}
+function sortPokemons(sortOnType) {
+    // Sorterer pokemons etter type
+    let typePokemons = [];
+    types.forEach((type) => {
+        typePokemons = pokemons.filter(
+            (pokemon) => pokemon.type === sortOnType
+        );
+    });
+    console.log(typePokemons);
 }
