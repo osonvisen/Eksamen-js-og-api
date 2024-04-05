@@ -5,9 +5,12 @@ let favorites = []; // Her lagrer vi de favorittene brukeren har valgt
 let types = []; // Her lagrer vi typene vi henter ut
 let display = document.querySelector(".display");
 let sortMenu = document.querySelector("#sort-by-type");
-const newPokemonBtn = document.querySelector("create-new-pokemon");
+let selectedFavourites = document.querySelector(".selected-favourites");
+const newPokemonBtn = document.querySelector(".create-new-pokemon");
 // Lager et array med alle typene pokemons
-
+newPokemonBtn.addEventListener("click", () => {
+    console.log("Vi skal lage ny pokemon senere!");
+});
 // Sjekker om det ligger noe i localStorage
 readLocalStorage();
 function readLocalStorage() {
@@ -24,6 +27,7 @@ function readLocalStorage() {
     } else {
         catchEmAll();
     }
+    selectedFavourites.innerHTML = "";
 }
 
 // Fanger 50 tilfeldige pokemons
@@ -68,6 +72,7 @@ function buildPokemons() {
     // setTimeout((pokemons = shufflePokemons()), 300);
     console.log("Lagrer..");
     setTimeout(storePokemons, 200);
+    setTimeout(findTypes, 300);
     setTimeout(assembleCards, 500);
 }
 
@@ -83,7 +88,57 @@ function storePokemons(key, array) {
 function styleImageText() {}
 
 function assembleCards() {
-    pokemons.forEach((pokemon, index) => {
+    display.innerHTML = "";
+    renderPokemons(pokemons, display);
+}
+function findTypes() {
+    // Lager et array med alle typene pokemons
+    pokemons.forEach((pokemon) => {
+        if (!types.includes(pokemon.type)) {
+            types.push(pokemon.type);
+        }
+    });
+    console.log(types);
+    dropDownMenu();
+    sortPokemons("grass"); // Bare et eksempel
+}
+function sortPokemons(sortOnType) {
+    // Sorterer pokemons etter type
+    let typePokemons = [];
+    types.forEach((type) => {
+        typePokemons = pokemons.filter(
+            (pokemon) => pokemon.type === sortOnType
+        );
+    });
+    console.log(typePokemons);
+}
+function dropDownMenu() {
+    types.forEach((type) => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type;
+        sortMenu.append(option);
+    });
+}
+
+sortMenu.addEventListener("change", () => {
+    console.log(sortMenu.value);
+    if (sortMenu.value == "") {
+        assembleCards();
+    } else {
+        let pokemonsSorted = pokemons.filter(
+            (pokemon) => pokemon.type === sortMenu.value
+        );
+        renderPokemons(pokemonsSorted, display);
+    }
+    // sortPokemons(sortMenu.value);
+    // display.innerHTML = "";
+    // assembleCards();
+});
+
+function renderPokemons(sortedArray, destination) {
+    destination.innerHTML = "";
+    sortedArray.forEach((pokemon, index) => {
         const pokemonCard = document.createElement("div");
         pokemonCard.style.display = "flex";
         pokemonCard.style.flexDirection = "column";
@@ -122,8 +177,6 @@ function assembleCards() {
         typeDiv.append(typeKey, typeValue);
 
         imgText.append(nameDiv, typeDiv);
-        // imgText.innerHTML = `<p>Navn: ${pokemon.name}</p>`;
-        // imgText.innerHTML += `<p>Type: ${pokemon.type}</p>`;
         const storeBtn = document.createElement("button");
         storeBtn.innerHTML = "Lagre";
         storeBtn.addEventListener("click", () => {
@@ -165,56 +218,12 @@ function assembleCards() {
         delBtn.innerHTML = "Slett";
         delBtn.style.backgroundColor = "red";
         delBtn.addEventListener("click", () => {
-            pokemons.splice(index, 1);
+            sortedArray.splice(index, 1);
             storePokemons();
             display.innerHTML = "";
             assembleCards();
         });
-
         pokemonCard.append(imgDiv, imgText, storeBtn, editBtn, delBtn);
-        display.appendChild(pokemonCard);
-    });
-
-    findTypes();
-}
-function findTypes() {
-    // Lager et array med alle typene pokemons
-    pokemons.forEach((pokemon) => {
-        if (!types.includes(pokemon.type)) {
-            types.push(pokemon.type);
-        }
-    });
-    console.log(types);
-    dropDownMenu();
-    sortPokemons("grass"); // Bare et eksempel
-}
-function sortPokemons(sortOnType) {
-    // Sorterer pokemons etter type
-    let typePokemons = [];
-    types.forEach((type) => {
-        typePokemons = pokemons.filter(
-            (pokemon) => pokemon.type === sortOnType
-        );
-    });
-    console.log(typePokemons);
-}
-function dropDownMenu() {
-    types.forEach((type) => {
-        const option = document.createElement("option");
-        option.value = type;
-        option.textContent = type;
-        sortMenu.append(option);
+        destination.appendChild(pokemonCard);
     });
 }
-
-sortMenu.addEventListener("change", () => {
-    console.log(sortMenu.value);
-    if (sortMenu.value === "dittvalg") {
-        makeDogsArray();
-    } else {
-        sortPokemons(sortMenu.value);
-    }
-    // sortPokemons(sortMenu.value);
-    // display.innerHTML = "";
-    // assembleCards();
-});
