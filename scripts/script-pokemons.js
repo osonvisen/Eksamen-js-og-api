@@ -30,11 +30,11 @@ async function catchEmAll() {
     try {
         // Henter pokemons fra api
         const response = await fetch(
-            "https://pokeapi.co/api/v2/pokemon?limit=50"
+            "https://pokeapi.co/api/v2/pokemon?limit=60"
         );
         const data = await response.json();
         pokeContainer = data.results;
-        setTimeout(buildPokemons(), 500);
+        setTimeout(buildPokemons(), 300);
     } catch (error) {
         console.error("Sliter med å laste ned pokemons..! " + error);
     }
@@ -65,8 +65,8 @@ function buildPokemons() {
     });
     // setTimeout((pokemons = shufflePokemons()), 300);
     console.log("Lagrer..");
-    setTimeout(storePokemons, 300);
-    setTimeout(assembleCards, 700);
+    setTimeout(storePokemons, 200);
+    setTimeout(assembleCards, 500);
 }
 
 function storePokemons(key, array) {
@@ -77,6 +77,8 @@ function storePokemons(key, array) {
     localStorage.setItem(key, JSON.stringify(array));
     console.log("Lagret i localStorage: ");
 }
+
+function styleImageText() {}
 
 function assembleCards() {
     pokemons.forEach((pokemon, index) => {
@@ -90,9 +92,36 @@ function assembleCards() {
         const imgDiv = document.createElement("div");
         imgDiv.innerHTML = `<img src="${pokemon.image}" alt="${pokemons[0].name}" style="width: 150px">`;
         imgDiv.style.width = "100%";
+
         const imgText = document.createElement("div");
-        imgText.innerHTML = `<p>Navn: ${pokemon.name}</p>`;
-        imgText.innerHTML += `<p>Type: ${pokemon.type}</p>`;
+        imgText.style.display = "flex";
+        imgText.style.flexDirection = "column";
+
+        const nameDiv = document.createElement("div");
+        nameDiv.style.display = "flex";
+        nameDiv.style.width = "100%";
+        nameDiv.style.justifyContent = "center";
+        const nameKey = document.createElement("div");
+        nameKey.innerHTML = "Navn: ";
+        const nameValue = document.createElement("div");
+        nameValue.innerHTML = pokemon.name;
+        nameDiv.append(nameKey, nameValue);
+
+        const typeDiv = document.createElement("div");
+        typeDiv.style.display = "flex";
+        typeDiv.style.width = "100%";
+        typeDiv.style.justifyContent = "center";
+        typeDiv.style.marginBottom = "10px";
+        const typeKey = document.createElement("div");
+        typeKey.innerHTML = "Type: ";
+        const typeValue = document.createElement("div");
+        typeValue.innerHTML = pokemon.type;
+        typeValue.style.alignContent = "center";
+        typeDiv.append(typeKey, typeValue);
+
+        imgText.append(nameDiv, typeDiv);
+        // imgText.innerHTML = `<p>Navn: ${pokemon.name}</p>`;
+        // imgText.innerHTML += `<p>Type: ${pokemon.type}</p>`;
         const storeBtn = document.createElement("button");
         storeBtn.innerHTML = "Lagre";
         storeBtn.addEventListener("click", () => {
@@ -102,12 +131,39 @@ function assembleCards() {
         });
         const editBtn = document.createElement("button");
         editBtn.innerHTML = "Rediger";
+        editBtn.addEventListener("click", () => {
+            console.log("Rediger");
+            const editName = document.createElement("input");
+            editName.value = pokemon.name;
+            nameValue.innerHTML = "";
+            nameDiv.style.flexWrap = "wrap";
+            const storeEditBtn = document.createElement("button");
+            storeEditBtn.innerHTML = "Lagre endringene";
+            storeEditBtn.style.marginTop = "5px";
+            storeEditBtn.addEventListener("click", () => {
+                pokemon.name = editName.value;
+                pokemon.type = editType.value;
+                nameValue.innerHTML = editName.value;
+                typeValue.innerHTML = editType.value;
+                storePokemons();
+                display.innerHTML = "";
+                assembleCards();
+            });
+            typeDiv.appendChild(storeEditBtn);
+
+            const editType = document.createElement("input");
+            editType.value = pokemon.type;
+            typeValue.innerHTML = "";
+            nameValue.append(editName);
+            typeValue.append(editType);
+            typeDiv.style.flexWrap = "wrap";
+            typeDiv.style.marginBottom = "10px";
+        });
         const delBtn = document.createElement("button");
         delBtn.innerHTML = "Slett";
         delBtn.style.backgroundColor = "red";
         delBtn.addEventListener("click", () => {
             pokemons.splice(index, 1);
-
             storePokemons();
             display.innerHTML = "";
             assembleCards();
