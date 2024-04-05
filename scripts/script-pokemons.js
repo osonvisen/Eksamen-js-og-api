@@ -5,6 +5,7 @@ let favorites = []; // Her lagrer vi de favorittene brukeren har valgt
 let types = []; // Her lagrer vi typene vi henter ut
 let display = document.querySelector(".display");
 let sortMenu = document.querySelector("#sort-by-type");
+const newPokemonBtn = document.querySelector("create-new-pokemon");
 // Lager et array med alle typene pokemons
 
 // Sjekker om det ligger noe i localStorage
@@ -173,6 +174,7 @@ function assembleCards() {
         pokemonCard.append(imgDiv, imgText, storeBtn, editBtn, delBtn);
         display.appendChild(pokemonCard);
     });
+
     findTypes();
 }
 function findTypes() {
@@ -183,7 +185,8 @@ function findTypes() {
         }
     });
     console.log(types);
-    sortPokemons("grass");
+    dropDownMenu();
+    sortPokemons("grass"); // Bare et eksempel
 }
 function sortPokemons(sortOnType) {
     // Sorterer pokemons etter type
@@ -195,3 +198,23 @@ function sortPokemons(sortOnType) {
     });
     console.log(typePokemons);
 }
+function dropDownMenu() {
+    types.forEach((type) => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type;
+        sortMenu.append(option);
+    });
+}
+
+sortMenu.addEventListener("change", () => {
+    console.log(sortMenu.value);
+    if (sortMenu.value === "dittvalg") {
+        makeDogsArray();
+    } else {
+        sortPokemons(sortMenu.value);
+    }
+    // sortPokemons(sortMenu.value);
+    // display.innerHTML = "";
+    // assembleCards();
+});
