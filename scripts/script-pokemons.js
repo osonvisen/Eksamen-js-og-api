@@ -24,6 +24,7 @@ function readLocalStorage() {
     if (localStorage.getItem("storedPokemons")) {
         pokemons = JSON.parse(localStorage.getItem("storedPokemons"));
         console.log("Hentet pokemons fra localStorage: ");
+        findTypes();
         showAllPokemons(pokemons, display);
     } else {
         catchEmAll();
@@ -97,7 +98,6 @@ function findTypes() {
             types.push(pokemon.type);
         }
     });
-    console.log(types);
     dropDownMenu();
 }
 function sortPokemons(sortOnType) {
@@ -120,14 +120,14 @@ function dropDownMenu() {
 }
 
 sortMenu.addEventListener("change", () => {
-    console.log(sortMenu.value);
+    console.log("Vi sorterer på " + sortMenu.value);
     if (sortMenu.value == "") {
         showAllPokemons();
     } else {
         let pokemonsSorted = pokemons.filter(
             (pokemon) => pokemon.type === sortMenu.value
         );
-        showAllPokemons();
+        renderPokemons(pokemonsSorted, display);
     }
     // sortPokemons(sortMenu.value);
     // display.innerHTML = "";
@@ -191,12 +191,16 @@ function renderPokemons(sortedArray, destination, edit) {
 
         if (edit) {
             const storeBtn = document.createElement("button");
-            storeBtn.innerHTML = "Lagre";
+            storeBtn.innerHTML = "Liker";
             storeBtn.addEventListener("click", () => {
-                favorites.push(pokemon);
-                console.log(favorites);
-                storePokemons("storedFavorites", favorites);
-                renderFavourites();
+                // Sjekker om pokemonen allerede finnes i favourites
+                if (favorites.some((fav) => fav.name === pokemon.name)) {
+                    alert("Pokemonen er allerede i favorittene");
+                } else {
+                    favorites.push(pokemon);
+                    storePokemons("storedFavorites", favorites);
+                    renderFavourites();
+                }
             });
             const editBtn = document.createElement("button");
             editBtn.innerHTML = "Rediger";

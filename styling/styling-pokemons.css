@@ -18,9 +18,10 @@ main {
     width: 100%;
 }
 .display {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    row-gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    /* grid-template-columns: repeat(5, 1fr); */
+    gap: 20px;
     width: 900px;
 }
 .selected-favourites,
