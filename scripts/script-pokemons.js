@@ -2,30 +2,30 @@
 let pokemons = []; // Her lagrer vi de ferdige pokemons, som skal være vårt 'api'
 let pokeContainer = []; // Mellomlager
 let favorites = []; // Her lagrer vi de favorittene brukeren har valgt
+let maxFavourites = 5; // Her definerer vi hvor mange favoritter vi kan ha
 let types = []; // Her lagrer vi typene vi henter ut
 let display = document.querySelector(".display");
 let sortMenu = document.querySelector("#sort-type");
 let selectedFavourites = document.querySelector(".selected-favourites");
 const newPokemonBtn = document.querySelector(".create-new-pokemon");
+let createNewPokemon = document.querySelector(".make-new-pokemon");
 // Lager et array med alle typene pokemons
 newPokemonBtn.addEventListener("click", () => {
-    console.log("Vi skal lage ny pokemon senere!");
+    makeNewPokemon();
 });
 // Sjekker om det ligger noe i localStorage
 readLocalStorage();
 function readLocalStorage() {
-    if (localStorage.getItem("storedFavorites")) {
-        favorites = JSON.parse(localStorage.getItem("storedFavorites"));
-        console.log("Hentet fra favoritter localStorage: ");
-        renderFavourites();
-    } else {
-        console.log("Ingen favoritter funnet i localStorage");
-    }
     if (localStorage.getItem("storedPokemons")) {
         pokemons = JSON.parse(localStorage.getItem("storedPokemons"));
-        console.log("Hentet pokemons fra localStorage: ");
         findTypes();
         showAllPokemons(pokemons, display);
+        if (localStorage.getItem("storedFavorites")) {
+            favorites = JSON.parse(localStorage.getItem("storedFavorites"));
+            renderFavourites();
+        } else {
+            onsole.log("Ingen favoritter funnet i localStorage");
+        }
     } else {
         catchEmAll();
     }
@@ -37,7 +37,7 @@ async function catchEmAll() {
     try {
         // Henter pokemons fra api
         const response = await fetch(
-            "https://pokeapi.co/api/v2/pokemon?limit=60"
+            "https://pokeapi.co/api/v2/pokemon?limit=50"
         );
         const data = await response.json();
         pokeContainer = data.results;
@@ -49,7 +49,6 @@ async function catchEmAll() {
 // Fetcher og sorterer detaljene vi trenger om pokemonene
 // og legger dem i pokemons, som vi skal bruke videre.
 function buildPokemons() {
-    console.log("Bygger pokemonene");
     pokeContainer.forEach(async (pokemon) => {
         try {
             const response = await fetch(pokemon.url);
@@ -71,19 +70,18 @@ function buildPokemons() {
         }
     });
     // setTimeout((pokemons = shufflePokemons()), 300);
-    console.log("Lagrer..");
-    setTimeout(storePokemons, 200);
+    console.log("Sender til lagring");
+    setTimeout(storePokemons, 200, pokemons, "storedPokemons");
     setTimeout(findTypes, 300);
     setTimeout(showAllPokemons, 500);
 }
 
-function storePokemons(key, array) {
-    if (key === undefined || key == "") {
-        key = "storedPokemons";
-        array = pokemons;
+function storePokemons(array, key) {
+    if (array === undefined) {
+        console.log("Mottok ingen array");
+    } else {
+        localStorage.setItem(key, JSON.stringify(array));
     }
-    localStorage.setItem(key, JSON.stringify(array));
-    console.log("Lagret i localStorage: ");
 }
 
 function styleImageText() {}
@@ -93,6 +91,7 @@ function showAllPokemons() {
 }
 function findTypes() {
     // Lager et array med alle typene pokemons
+    types = [];
     pokemons.forEach((pokemon) => {
         if (!types.includes(pokemon.type)) {
             types.push(pokemon.type);
@@ -108,9 +107,13 @@ function sortPokemons(sortOnType) {
             (pokemon) => pokemon.type === sortOnType
         );
     });
-    console.log(types);
 }
 function dropDownMenu() {
+    sortMenu.innerHTML = "";
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "alle";
+    sortMenu.appendChild(option);
     types.forEach((type) => {
         const option = document.createElement("option");
         option.value = type;
@@ -120,7 +123,6 @@ function dropDownMenu() {
 }
 
 sortMenu.addEventListener("change", () => {
-    console.log("Vi sorterer på " + sortMenu.value);
     if (sortMenu.value == "") {
         showAllPokemons();
     } else {
@@ -129,14 +131,14 @@ sortMenu.addEventListener("change", () => {
         );
         renderPokemons(pokemonsSorted, display);
     }
-    // sortPokemons(sortMenu.value);
-    // display.innerHTML = "";
-    // showAllPokemons();
 });
 
 function renderPokemons(sortedArray, destination, edit) {
     if (edit === undefined) {
         edit = true;
+        key = "storedPokemons";
+    } else {
+        key = "storedFavourites";
     }
     destination.innerHTML = "";
     sortedArray.forEach((pokemon, index) => {
@@ -181,9 +183,10 @@ function renderPokemons(sortedArray, destination, edit) {
         const delBtn = document.createElement("button");
         delBtn.innerHTML = "Slett";
         delBtn.style.backgroundColor = "red";
+
         delBtn.addEventListener("click", () => {
             sortedArray.splice(index, 1);
-            storePokemons();
+            storePokemons(sortedArray, key);
             display.innerHTML = "";
             showAllPokemons();
             renderFavourites();
@@ -193,19 +196,26 @@ function renderPokemons(sortedArray, destination, edit) {
             const storeBtn = document.createElement("button");
             storeBtn.innerHTML = "Liker";
             storeBtn.addEventListener("click", () => {
-                // Sjekker om pokemonen allerede finnes i favourites
-                if (favorites.some((fav) => fav.name === pokemon.name)) {
-                    alert("Pokemonen er allerede i favorittene");
+                if (favorites.length >= maxFavourites) {
+                    alert(
+                        "Du kan bare ha " +
+                            maxFavourites +
+                            " favoritter! Du må slette en eller flere først"
+                    );
                 } else {
-                    favorites.push(pokemon);
-                    storePokemons("storedFavorites", favorites);
-                    renderFavourites();
+                    // Sjekker om pokemonen allerede finnes i favourites
+                    if (favorites.some((fav) => fav.name === pokemon.name)) {
+                        alert("Pokemonen er allerede i favorittene");
+                    } else {
+                        favorites.push(pokemon);
+                        storePokemons(favorites, "storedFavorites");
+                        renderFavourites();
+                    }
                 }
             });
             const editBtn = document.createElement("button");
             editBtn.innerHTML = "Rediger";
             editBtn.addEventListener("click", () => {
-                console.log("Rediger");
                 const editName = document.createElement("input");
                 editName.value = pokemon.name;
                 nameValue.innerHTML = "";
@@ -218,7 +228,7 @@ function renderPokemons(sortedArray, destination, edit) {
                     pokemon.type = editType.value;
                     nameValue.innerHTML = editName.value;
                     typeValue.innerHTML = editType.value;
-                    storePokemons();
+                    storePokemons(pokemons);
                     display.innerHTML = "";
                     showAllPokemons();
                 });
@@ -242,7 +252,53 @@ function renderPokemons(sortedArray, destination, edit) {
     });
 }
 
+// Når vi skal vise favorittene, så trenger vi ikke knappene for
+// redigering og liker. Bruker parameteret false til dette.
 function renderFavourites() {
     let edit = false;
     renderPokemons(favorites, selectedFavourites, edit);
+}
+
+function makeNewPokemon() {
+    newPokemonBtn.style.display = "none";
+    const newCard = document.createElement("div");
+    const image = "./images/default.png";
+    const newName = document.createElement("input");
+    newName.type = "text";
+    newName.placeholder = "Navn på pokemonen";
+    const newType = document.createElement("input");
+    newType.type = "text";
+    newType.placeholder = "Type på pokemonen";
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.innerHTML = "Avbryt";
+    cancelBtn.addEventListener("click", () => {
+        newCard.innerHTML = "";
+        newPokemonBtn.style.display = "block";
+    });
+    const addBtn = document.createElement("button");
+    addBtn.innerHTML = "Legg til";
+
+    addBtn.addEventListener("click", () => {
+        newPokemonBtn.style.display = "none";
+        if (newName.value == "" || newType.value == "") {
+            alert("Du må fylle inn alle feltene");
+        } else {
+            const newPokemon = {
+                name: newName.value,
+                type: newType.value,
+                image: image,
+            };
+            pokemons.push(newPokemon);
+
+            storePokemons(pokemons, "storedPokemons");
+            findTypes();
+            showAllPokemons();
+            newCard.innerHTML = "";
+            newPokemonBtn.style.display = "block";
+        }
+    });
+
+    newCard.append(newName, newType, addBtn, cancelBtn);
+    createNewPokemon.appendChild(newCard);
 }
