@@ -4,7 +4,7 @@ let pokeContainer = []; // Mellomlager
 let favorites = []; // Her lagrer vi de favorittene brukeren har valgt
 let types = []; // Her lagrer vi typene vi henter ut
 let display = document.querySelector(".display");
-let sortMenu = document.querySelector("#sort-by-type");
+let sortMenu = document.querySelector("#sort-type");
 let selectedFavourites = document.querySelector(".selected-favourites");
 const newPokemonBtn = document.querySelector(".create-new-pokemon");
 // Lager et array med alle typene pokemons
@@ -17,17 +17,17 @@ function readLocalStorage() {
     if (localStorage.getItem("storedFavorites")) {
         favorites = JSON.parse(localStorage.getItem("storedFavorites"));
         console.log("Hentet fra favoritter localStorage: ");
+        renderFavourites();
     } else {
         console.log("Ingen favoritter funnet i localStorage");
     }
     if (localStorage.getItem("storedPokemons")) {
         pokemons = JSON.parse(localStorage.getItem("storedPokemons"));
         console.log("Hentet pokemons fra localStorage: ");
-        assembleCards();
+        showAllPokemons(pokemons, display);
     } else {
         catchEmAll();
     }
-    selectedFavourites.innerHTML = "";
 }
 
 // Fanger 50 tilfeldige pokemons
@@ -73,7 +73,7 @@ function buildPokemons() {
     console.log("Lagrer..");
     setTimeout(storePokemons, 200);
     setTimeout(findTypes, 300);
-    setTimeout(assembleCards, 500);
+    setTimeout(showAllPokemons, 500);
 }
 
 function storePokemons(key, array) {
@@ -87,8 +87,7 @@ function storePokemons(key, array) {
 
 function styleImageText() {}
 
-function assembleCards() {
-    display.innerHTML = "";
+function showAllPokemons() {
     renderPokemons(pokemons, display);
 }
 function findTypes() {
@@ -100,7 +99,6 @@ function findTypes() {
     });
     console.log(types);
     dropDownMenu();
-    sortPokemons("grass"); // Bare et eksempel
 }
 function sortPokemons(sortOnType) {
     // Sorterer pokemons etter type
@@ -110,7 +108,7 @@ function sortPokemons(sortOnType) {
             (pokemon) => pokemon.type === sortOnType
         );
     });
-    console.log(typePokemons);
+    console.log(types);
 }
 function dropDownMenu() {
     types.forEach((type) => {
@@ -124,19 +122,22 @@ function dropDownMenu() {
 sortMenu.addEventListener("change", () => {
     console.log(sortMenu.value);
     if (sortMenu.value == "") {
-        assembleCards();
+        showAllPokemons();
     } else {
         let pokemonsSorted = pokemons.filter(
             (pokemon) => pokemon.type === sortMenu.value
         );
-        renderPokemons(pokemonsSorted, display);
+        showAllPokemons();
     }
     // sortPokemons(sortMenu.value);
     // display.innerHTML = "";
-    // assembleCards();
+    // showAllPokemons();
 });
 
-function renderPokemons(sortedArray, destination) {
+function renderPokemons(sortedArray, destination, edit) {
+    if (edit === undefined) {
+        edit = true;
+    }
     destination.innerHTML = "";
     sortedArray.forEach((pokemon, index) => {
         const pokemonCard = document.createElement("div");
@@ -147,7 +148,7 @@ function renderPokemons(sortedArray, destination) {
         pokemonCard.style.padding = "7px";
         pokemonCard.style.borderRadius = "10px";
         const imgDiv = document.createElement("div");
-        imgDiv.innerHTML = `<img src="${pokemon.image}" alt="${pokemons[0].name}" style="width: 150px">`;
+        imgDiv.innerHTML = `<img src="${pokemon.image}" alt="${pokemon.name}" style="width: 150px">`;
         imgDiv.style.width = "100%";
 
         const imgText = document.createElement("div");
@@ -177,43 +178,6 @@ function renderPokemons(sortedArray, destination) {
         typeDiv.append(typeKey, typeValue);
 
         imgText.append(nameDiv, typeDiv);
-        const storeBtn = document.createElement("button");
-        storeBtn.innerHTML = "Lagre";
-        storeBtn.addEventListener("click", () => {
-            favorites.push(pokemon);
-            console.log(favorites);
-            storePokemons("storedFavorites", favorites);
-        });
-        const editBtn = document.createElement("button");
-        editBtn.innerHTML = "Rediger";
-        editBtn.addEventListener("click", () => {
-            console.log("Rediger");
-            const editName = document.createElement("input");
-            editName.value = pokemon.name;
-            nameValue.innerHTML = "";
-            nameDiv.style.flexWrap = "wrap";
-            const storeEditBtn = document.createElement("button");
-            storeEditBtn.innerHTML = "Lagre endringene";
-            storeEditBtn.style.marginTop = "5px";
-            storeEditBtn.addEventListener("click", () => {
-                pokemon.name = editName.value;
-                pokemon.type = editType.value;
-                nameValue.innerHTML = editName.value;
-                typeValue.innerHTML = editType.value;
-                storePokemons();
-                display.innerHTML = "";
-                assembleCards();
-            });
-            typeDiv.appendChild(storeEditBtn);
-
-            const editType = document.createElement("input");
-            editType.value = pokemon.type;
-            typeValue.innerHTML = "";
-            nameValue.append(editName);
-            typeValue.append(editType);
-            typeDiv.style.flexWrap = "wrap";
-            typeDiv.style.marginBottom = "10px";
-        });
         const delBtn = document.createElement("button");
         delBtn.innerHTML = "Slett";
         delBtn.style.backgroundColor = "red";
@@ -221,9 +185,60 @@ function renderPokemons(sortedArray, destination) {
             sortedArray.splice(index, 1);
             storePokemons();
             display.innerHTML = "";
-            assembleCards();
+            showAllPokemons();
+            renderFavourites();
         });
-        pokemonCard.append(imgDiv, imgText, storeBtn, editBtn, delBtn);
+
+        if (edit) {
+            const storeBtn = document.createElement("button");
+            storeBtn.innerHTML = "Lagre";
+            storeBtn.addEventListener("click", () => {
+                favorites.push(pokemon);
+                console.log(favorites);
+                storePokemons("storedFavorites", favorites);
+                renderFavourites();
+            });
+            const editBtn = document.createElement("button");
+            editBtn.innerHTML = "Rediger";
+            editBtn.addEventListener("click", () => {
+                console.log("Rediger");
+                const editName = document.createElement("input");
+                editName.value = pokemon.name;
+                nameValue.innerHTML = "";
+                nameDiv.style.flexWrap = "wrap";
+                const storeEditBtn = document.createElement("button");
+                storeEditBtn.innerHTML = "Lagre endringene";
+                storeEditBtn.style.marginTop = "5px";
+                storeEditBtn.addEventListener("click", () => {
+                    pokemon.name = editName.value;
+                    pokemon.type = editType.value;
+                    nameValue.innerHTML = editName.value;
+                    typeValue.innerHTML = editType.value;
+                    storePokemons();
+                    display.innerHTML = "";
+                    showAllPokemons();
+                });
+                typeDiv.appendChild(storeEditBtn);
+
+                const editType = document.createElement("input");
+                editType.value = pokemon.type;
+                typeValue.innerHTML = "";
+                nameValue.append(editName);
+                typeValue.append(editType);
+                typeDiv.style.flexWrap = "wrap";
+                typeDiv.style.marginBottom = "10px";
+            });
+
+            pokemonCard.append(imgDiv, imgText, storeBtn, editBtn, delBtn);
+        } else {
+            pokemonCard.append(imgDiv, imgText, delBtn);
+        }
+
         destination.appendChild(pokemonCard);
     });
+}
+
+function renderFavourites() {
+    let edit = false;
+    renderPokemons(favorites, selectedFavourites, edit);
 }
