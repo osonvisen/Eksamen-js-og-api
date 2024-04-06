@@ -330,11 +330,9 @@ function makeNewPokemon() {
     const newName = document.createElement("input");
     newName.type = "text";
     newName.placeholder = "Navn på pokemonen";
-
     const newType = document.createElement("input");
     newType.type = "text";
     newType.placeholder = "Type på pokemonen";
-
     const cancelBtn = document.createElement("button");
     cancelBtn.innerHTML = "Avbryt";
     cancelBtn.addEventListener("click", () => {
@@ -343,7 +341,6 @@ function makeNewPokemon() {
     });
     const addBtn = document.createElement("button");
     addBtn.innerHTML = "Legg til";
-
     addBtn.addEventListener("click", () => {
         newPokemonBtn.style.display = "none";
         if (newName.value == "" || newType.value == "") {
@@ -357,7 +354,6 @@ function makeNewPokemon() {
                 color: bgColor,
             };
             pokemons.push(newPokemon);
-
             storePokemons(pokemons, "storedPokemons");
             findTypes();
             showAllPokemons();
@@ -365,7 +361,6 @@ function makeNewPokemon() {
             newPokemonBtn.style.display = "block";
         }
     });
-
     newCard.append(newName, newType, addBtn, cancelBtn);
     createNewPokemon.appendChild(newCard);
 }
