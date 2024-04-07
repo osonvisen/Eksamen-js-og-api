@@ -1,3 +1,5 @@
+// Hentet pokemon-ikoner fra http://www.rw-designer.com/icon-set/pokemon-types
+
 // Finner alle pokemons fra apiet og leggerer de i en liste
 let pokemons = []; // Her lagrer vi de ferdige pokemons, som skal være vårt 'api'
 let pokeContainer = []; // Mellomlager
@@ -9,6 +11,7 @@ let sortMenu = document.querySelector("#sort-type");
 let selectedFavourites = document.querySelector(".selected-favourites");
 const newPokemonBtn = document.querySelector(".create-new-pokemon");
 let createNewPokemon = document.querySelector(".make-new-pokemon");
+let showIcons = document.querySelector(".show-icons");
 
 // Jeg predefinerer noen farger for noen typer pokemons.
 // Tanken er at vi kan legge til nye farger når en ny
@@ -33,7 +36,7 @@ async function fetchPokemonTypes() {
         allPokemonTypes.splice(18, 2); // Fjerner de to siste typene
         readLocalStorage();
     } catch (error) {
-        console.log(error);
+        console.error("Får ikke lastet ned pokemons..! " + error);
     }
 }
 // Lager et array med alle typene pokemons
@@ -83,6 +86,7 @@ function buildPokemons() {
             // Henter ut typen, navnet og bildet på pokemonen
             // Legger til et default bilde hvis det ikke finnes et bilde
             let picture;
+            const pokeImage = `../images/icons/${data.types[0].type.name}.ico`;
             if (!data.sprites.front_shiny) {
                 picture = "../images/default.png";
             } else {
@@ -93,6 +97,7 @@ function buildPokemons() {
                 image: picture,
                 name: data.name,
                 color: findRandomColor(data.types[0].type.name),
+                icon: `../images/icons/${data.types[0].type.name}.ico`,
             });
         } catch (error) {
             console.error("Sliter med å sette sammen pokemons..! " + error);
@@ -131,7 +136,9 @@ function storePokemons(array, key) {
 }
 
 function showAllPokemons() {
-    renderPokemons(pokemons, display, true);
+    display.innerHTML = "";
+    showIcons.innerHTML = "";
+    renderPokemons(pokemons, false); // false fordi denne er ikke sortert
 }
 function findTypes() {
     // Lager et array med alle typene pokemons
@@ -162,32 +169,82 @@ sortMenu.addEventListener("change", () => {
     if (sortMenu.value == "") {
         showAllPokemons();
     } else {
-        let pokemonsSorted = pokemons.filter(
-            (pokemon) => pokemon.type === sortMenu.value
-        );
-        renderPokemons(pokemonsSorted, display, true, true);
+        sortPokemons(sortMenu.value);
     }
 });
-
+function sortPokemons(type) {
+    let pokemonsSorted = pokemons.filter((pokemon) => pokemon.type === type);
+    renderPokemons(pokemonsSorted, true); // true fordi dette er en sortert liste
+    sortMenu.value = type;
+}
 // Vi mottar parametre for hvilket array vi skal skrive ut,
 // hvor vi skal skrive ut, om de skal ha liker- og redigerknapper
 // samt om dette er en sortert liste.
-function renderPokemons(sortedArray, destination, edit, sorted) {
-    if (edit === undefined) {
+function renderPokemons(sortedArray, sorted) {
+    if (sortedArray[0].fav) {
+        destination = selectedFavourites;
+        edit = false;
+    } else {
+        destination = display;
         edit = true;
+    }
+    if (sorted) {
+        showIcons.innerHTML = "";
+        const sortIcons = document.createElement("div");
+        sortIcons.style.display = "flex";
+        sortIcons.style.justifyContent = "center";
+        sortIcons.style.alignItems = "center";
+        const iconDiv = document.createElement("div");
+        iconDiv.style.marginRight = "15px";
+        const iconImg = document.createElement("img");
+        iconImg.src = "../images/default.png";
+        iconImg.style.width = "50px";
+        const iconName = document.createElement("div");
+        iconName.innerHTML = "Alle";
+        iconImg.onclick = showAllPokemons;
+        iconDiv.append(iconImg, iconName);
+        sortIcons.appendChild(iconDiv);
+        types.forEach((type) => {
+            const iconDiv = document.createElement("div");
+            iconDiv.style.marginRight = "8px";
+            const iconImg = document.createElement("img");
+            iconImg.src = `../images/icons/${type}.ico`;
+            iconImg.alt = type.type;
+            iconImg.style.width = "50px";
+            const iconName = document.createElement("div");
+            iconName.innerHTML = type;
+            iconDiv.append(iconImg, iconName);
+            sortIcons.appendChild(iconDiv);
+            iconImg.addEventListener("click", (event) => {
+                sortPokemons(type);
+            });
+        });
+        showIcons.append(sortIcons);
     }
     destination.innerHTML = "";
     sortedArray.forEach((pokemon, index) => {
         const pokemonCard = document.createElement("div");
         pokemonCard.style.display = "flex";
         pokemonCard.style.flexDirection = "column";
+        pokemonCard.style.position = "relative";
         pokemonCard.style.width = "150px";
         pokemonCard.style.backgroundColor = pokemon.color;
         pokemonCard.style.padding = "7px";
         pokemonCard.style.borderRadius = "10px";
+
         const imgDiv = document.createElement("div");
         imgDiv.innerHTML = `<img src="${pokemon.image}" alt="${pokemon.name}" style="width: 150px">`;
         imgDiv.style.width = "100%";
+
+        const typeIcon = document.createElement("div");
+        typeIcon.style.display = "flex";
+        typeIcon.style.position = "absolute";
+        typeIcon.innerHTML = `<img src="${pokemon.icon}" style="width: 60px" >`;
+        typeIcon.style.borderRadius = "50%;";
+        typeIcon.style.top = "120px";
+        typeIcon.addEventListener("click", () => {
+            sortPokemons(pokemon.type);
+        });
 
         const imgText = document.createElement("div");
         imgText.style.display = "flex";
@@ -228,14 +285,20 @@ function renderPokemons(sortedArray, destination, edit, sorted) {
             // Sletter pokemonen fra arrayen med alle pokemons
             // Først finner vi indexen  i  pokemons
             let deleteIndex = pokemons.indexOf(pokemon);
-            if (sorted) {
-                sortedArray.splice(index, 1);
-            }
-            deletePokemon(deleteIndex);
 
-            display.innerHTML = "";
-            renderPokemons(sortedArray, display, edit, sorted);
-            renderFavourites();
+            if (destination === selectedFavourites) {
+                favorites.splice(index, 1);
+                renderFavourites();
+            } else {
+                if (sorted) {
+                    sortedArray.splice(index, 1);
+                    deletePokemon(deleteIndex);
+                    renderPokemons(sortedArray, sorted);
+                } else {
+                    deletePokemon(deleteIndex);
+                    showAllPokemons();
+                }
+            }
         });
 
         if (edit) {
@@ -253,6 +316,7 @@ function renderPokemons(sortedArray, destination, edit, sorted) {
                     if (favorites.some((fav) => fav.name === pokemon.name)) {
                         alert("Pokemonen er allerede en favoritt!");
                     } else {
+                        pokemon.fav = true;
                         favorites.push(pokemon);
                         storePokemons(favorites, "storedFavorites");
                         renderFavourites();
@@ -282,22 +346,39 @@ function renderPokemons(sortedArray, destination, edit, sorted) {
                     });
                 });
                 storeEditBtn.addEventListener("click", () => {
+                    pokemons[index] = {
+                        type: typeValue.value,
+                        image: pokemon.image,
+                        name: pokemon.name,
+                        color: findRandomColor(typeValue.value),
+                        icon: `../images/icons/${typeValue.value}.ico`,
+                    };
+
                     pokemon.name = editName.value;
                     pokemon.type = typeValue;
                     nameValue.innerHTML = editName.value;
                     typeValue.innerHTML = typeValue.value;
                     pokemons[index].type = typeValue.value;
+                    pokemons[
+                        index
+                    ].icon = `../images/icons/${typeValue.value}.ico`;
                     storePokemons(pokemons, "storedPokemons");
-                    display.innerHTML = "";
                     showAllPokemons();
                 });
                 typeDiv.appendChild(storeEditBtn);
                 typeValue.appendChild(typeOptions);
                 nameValue.append(editName);
             });
-            pokemonCard.append(imgDiv, imgText, likeBtn, editBtn, delBtn);
+            pokemonCard.append(
+                imgDiv,
+                imgText,
+                typeIcon,
+                likeBtn,
+                editBtn,
+                delBtn
+            );
         } else {
-            pokemonCard.append(imgDiv, imgText, delBtn);
+            pokemonCard.append(imgDiv, imgText, typeIcon, delBtn);
         }
         destination.appendChild(pokemonCard);
     });
@@ -309,7 +390,8 @@ function deletePokemon(index) {
 // Når vi skal vise favorittene, så trenger vi ikke knappene for
 // redigering og liker. Bruker parameteret false til dette.
 function renderFavourites() {
-    renderPokemons(favorites, selectedFavourites, false);
+    selectedFavourites.innerHTML = "";
+    renderPokemons(favorites, false); // false fordi dette er ikke en sortert liste
 }
 
 function makeNewPokemon() {
@@ -358,8 +440,8 @@ function makeNewPokemon() {
                 type: newType.value,
                 image: image,
                 color: bgColor,
+                icon: `../images/icons/${newType.value}.ico`,
             };
-            console.log("Dytter den nye inn i pokemons..");
             pokemons.push(newPokemon);
             storePokemons(pokemons, "storedPokemons");
             findTypes();
