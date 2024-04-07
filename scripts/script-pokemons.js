@@ -105,7 +105,7 @@ function buildPokemons() {
 function findRandomColor(pokemonType) {
     // Finner farge til en bakgrunn
     // Vi kan forhåndsdefinere noen farger
-    if (pokemonType.toLowerCase() in predefinedColors) {
+    if (pokemonType in predefinedColors) {
         return predefinedColors[pokemonType];
     } else {
         let r = Math.floor(Math.random() * 256);
@@ -165,13 +165,14 @@ sortMenu.addEventListener("change", () => {
         let pokemonsSorted = pokemons.filter(
             (pokemon) => pokemon.type === sortMenu.value
         );
-        renderPokemons(pokemonsSorted, display, true);
+        renderPokemons(pokemonsSorted, display, true, true);
     }
 });
 
 // Vi mottar parametre for hvilket array vi skal skrive ut,
-// hvor vi skal skrive ut, og om de skal ha liker- og redigerknapper
-function renderPokemons(sortedArray, destination, edit) {
+// hvor vi skal skrive ut, om de skal ha liker- og redigerknapper
+// samt om dette er en sortert liste.
+function renderPokemons(sortedArray, destination, edit, sorted) {
     if (edit === undefined) {
         edit = true;
     }
@@ -227,11 +228,13 @@ function renderPokemons(sortedArray, destination, edit) {
             // Sletter pokemonen fra arrayen med alle pokemons
             // Først finner vi indexen  i  pokemons
             let deleteIndex = pokemons.indexOf(pokemon);
-            sortedArray.splice(index, 1);
+            if (sorted) {
+                sortedArray.splice(index, 1);
+            }
             deletePokemon(deleteIndex);
 
             display.innerHTML = "";
-            renderPokemons(sortedArray, display, edit);
+            renderPokemons(sortedArray, display, edit, sorted);
             renderFavourites();
         });
 
@@ -266,6 +269,7 @@ function renderPokemons(sortedArray, destination, edit) {
                 const storeEditBtn = document.createElement("button");
                 storeEditBtn.innerHTML = "Lagre endringene";
                 storeEditBtn.style.marginTop = "5px";
+
                 const typeOptions = document.createElement("select");
                 allPokemonTypes.forEach((type) => {
                     const option = document.createElement("option");
@@ -274,11 +278,9 @@ function renderPokemons(sortedArray, destination, edit) {
                     option.innerHTML = type;
                     typeOptions.appendChild(option);
                     typeOptions.addEventListener("change", () => {
-                        console.log("Oppdaget en endring!" + typeOptions.value);
                         typeValue.value = typeOptions.value;
                     });
                 });
-
                 storeEditBtn.addEventListener("click", () => {
                     pokemon.name = editName.value;
                     pokemon.type = typeValue;
@@ -289,27 +291,14 @@ function renderPokemons(sortedArray, destination, edit) {
                     display.innerHTML = "";
                     showAllPokemons();
                 });
-
                 typeDiv.appendChild(storeEditBtn);
-
-                // Lager en option for hvert type
-                // Lager dragdown for typeValue
-
                 typeValue.appendChild(typeOptions);
-                // const editType = document.createElement("input");
-                // editType.value = pokemon.type;
-                // typeValue.innerHTML = "";
                 nameValue.append(editName);
-                // typeValue.append(editType);
-                // typeDiv.style.flexWrap = "wrap";
-                // typeDiv.style.marginBottom = "10px";
             });
-
             pokemonCard.append(imgDiv, imgText, likeBtn, editBtn, delBtn);
         } else {
             pokemonCard.append(imgDiv, imgText, delBtn);
         }
-
         destination.appendChild(pokemonCard);
     });
 }
@@ -329,10 +318,27 @@ function makeNewPokemon() {
     const image = "./images/default.png";
     const newName = document.createElement("input");
     newName.type = "text";
-    newName.placeholder = "Navn på pokemonen";
-    const newType = document.createElement("input");
-    newType.type = "text";
-    newType.placeholder = "Type på pokemonen";
+    newName.placeholder = "Navn på ny pokemon";
+
+    const newType = document.createElement("div");
+
+    const typeOption = document.createElement("select");
+    const option = document.createElement("option");
+    newType.innerHTML = "";
+    option.value = "";
+    option.innerHTML = "Velg type";
+    typeOption.appendChild(option);
+    allPokemonTypes.forEach((type) => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.innerHTML = type;
+        typeOption.appendChild(option);
+        typeOption.addEventListener("change", () => {
+            newType.value = typeOption.value;
+        });
+    });
+    newType.appendChild(typeOption);
+
     const cancelBtn = document.createElement("button");
     cancelBtn.innerHTML = "Avbryt";
     cancelBtn.addEventListener("click", () => {
@@ -353,6 +359,7 @@ function makeNewPokemon() {
                 image: image,
                 color: bgColor,
             };
+            console.log("Dytter den nye inn i pokemons..");
             pokemons.push(newPokemon);
             storePokemons(pokemons, "storedPokemons");
             findTypes();
