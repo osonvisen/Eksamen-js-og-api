@@ -1,0 +1,9 @@
+body {
+    background-color: lightgreen;
+    text-align: center;
+}
+canvas {
+    background: url(/images/pokeGameBackground.png);
+    background-size: cover;
+    border: 2px solid black;
+}
