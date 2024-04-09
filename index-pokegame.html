@@ -5,18 +5,25 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="/styling/styling-game.css" />
         <script src="/scripts/script-pokemon-game.js" defer></script>
-        <title>Animation - First Go</title>
+        <title>The Pokemon Game</title>
     </head>
     <body>
         <h1>Welcome to The Pokemon Game!</h1>
         <h3>Instruksjoner</h3>
-        <p>Player 1</p>
-        <p>
-            Styrer sin pokemon med<br />
-            W = Opp - S = Ned - A = Venstre - D = Høyre
-        </p>
-        <p>Player 2</p>
-        <p>Bruker piltastene. De er selvforklarende!</p>
+        <div class="instructions">
+            <div class="player1">
+                <p>Player 1</p>
+                <p>
+                    Styrer sin pokemon med<br />
+                    W = Opp - S = Ned - A = Venstre - D = Høyre
+                </p>
+            </div>
+            <div class="player2">
+                <p>Player 2</p>
+                <p>Bruker piltastene. De er selvforklarende!</p>
+            </div>
+        </div>
+
         <div class="score">
             <div class="health-player1">
                 <div class="health1-text">Helse spiller1:</div>
@@ -27,12 +34,13 @@
                 <div class="health2">100/100</div>
             </div>
         </div>
-        <canvas width="1000" height="938"></canvas>
-        <div class="attribution">
+        <div class="play-area"></div>
+
+        <!-- <div class="attribution">
             <a
                 href="https://www.freepik.com/free-vector/aerial-view-garden-background_4613367.htm#fromView=search&page=1&position=24&uuid=65531f06-7927-41c4-878e-45d50be05164"
                 >Background image by brgfx on Freepik</a
             >
-        </div>
+        </div> -->
     </body>
 </html>
