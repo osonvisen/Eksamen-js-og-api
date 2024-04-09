@@ -1,39 +1,59 @@
+let pokemons = ["Pikachu", "Charmander", "Squirtle", "Bulbasaur"];
+
+pokemons.forEach(async (pokemon) => {
+    console.log(pokemon.toLocaleLowerCase());
+
+    const urlApi = `https://pokeapi.co/api/v2/pokemon/${pokemon.toLocaleLowerCase()}`;
+    try {
+        const response = await fetch(urlApi);
+        const data = await response.json();
+        console.log(data.stats);
+    } catch (error) {
+        console.error("Kunne ikke laste pokemoner!");
+    }
+});
+
 let canvas = document.querySelector("canvas");
 // Canvas har størrelse x = 1000px og y = 938px
 let surface = canvas.getContext("2d");
+// Charmander
 let pokeObject1 = {
     x: 0,
     y: 0,
     width: 80,
     height: 80,
+    speed: 5,
+    attack: 15,
 };
+// Pikachu
 let pokeObject2 = {
     x: 0,
     y: 0,
     width: 64,
     height: 70,
+    speed: 7,
+    attack: 12,
 };
-// Lager nytt objekt av bien
-// Definerer startposisjonen, og henter bildet
-// Erklærer at den skal stå i ro ved start
+// Lager et objekt av pokemon
 let player1 = Object.create(pokeObject1);
-player1.x = 100;
+player1.x = 100; // Plasseringen ved oppstart
 player1.y = 100;
-let image1 = new Image();
-image1.addEventListener("load", loadHandler, false); // Venter til bildet er lastet ferdig
+let image1 = new Image(); // Oppretter bildeobjekt
+image1.addEventListener("load", update, false); // Venter til bildet er lastet ferdig
 image1.src = "../../images/charmander-right.png";
 let Xspeed1 = 0;
 let Yspeed1 = 0;
-let moveLeft1 = false;
+let moveLeft1 = false; // Setter at den skal stå i ro ved start
 let moveRight1 = false;
 let moveUp1 = false;
 let moveDown1 = false;
 
+// Oppretter objekt av pokemon til spiller 2
 let player2 = Object.create(pokeObject2);
 player2.x = 836;
 player2.y = 758;
 let image2 = new Image();
-image2.addEventListener("load", loadHandler, false); // Venter til bildet er lastet ferdig
+image2.addEventListener("load", update, false);
 image2.src = "../../images/pikachu-left.png";
 let Xspeed2 = 0;
 let Yspeed2 = 0;
@@ -42,11 +62,12 @@ let moveRight2 = false;
 let moveUp2 = false;
 let moveDown2 = false;
 
-// Lytter etter tastetrykk, og når tasteslipp
+// Lytter etter tastetrykk
 window.addEventListener(
     "keydown",
     function (e) {
         switch (e.key) {
+            // Bevegelser
             case "ArrowUp":
                 moveUp2 = true;
                 break;
@@ -71,10 +92,18 @@ window.addEventListener(
             case "d":
                 moveRight1 = true;
                 break;
+            // Så for angrep
+            case "q":
+                console.log("Player1 angrep");
+                break;
+            case "-":
+                console.log("Player2 angrep");
+                break;
         }
     },
     false
 );
+// Lytter etter tasteslipp, altså når man slipper knappen
 window.addEventListener(
     "keyup",
     function (e) {
@@ -109,9 +138,9 @@ window.addEventListener(
 );
 // Hva som skal skje når bildet er lastet ferdig
 // Da sendes dette til update-funksjonen
-function loadHandler() {
-    update();
-}
+// function loadHandler() {
+//     update();
+// }
 // Følger med på knappene som trykkes og sender pokemonene i riktig retning
 function update() {
     // creating the animation loop
@@ -122,16 +151,16 @@ function update() {
     player2.y += Yspeed2;
 
     if (moveUp1 && !moveDown1) {
-        Yspeed1 = -5;
+        Yspeed1 = -pokeObject1.speed;
     }
     if (moveDown1 && !moveUp1) {
-        Yspeed1 = 5;
+        Yspeed1 = pokeObject1.speed;
     }
     if (moveLeft1 && !moveRight1) {
-        Xspeed1 = -5;
+        Xspeed1 = -pokeObject1.speed;
     }
     if (moveRight1 && !moveLeft1) {
-        Xspeed1 = 5;
+        Xspeed1 = pokeObject1.speed;
     }
     if (!moveUp1 && !moveDown1) {
         Yspeed1 = 0;
@@ -146,16 +175,16 @@ function update() {
         player1.y = 0;
     }
     if (moveUp2 && !moveDown2) {
-        Yspeed2 = -5;
+        Yspeed2 = -pokeObject2.speed;
     }
     if (moveDown2 && !moveUp2) {
-        Yspeed2 = 5;
+        Yspeed2 = pokeObject2.speed;
     }
     if (moveLeft2 && !moveRight2) {
-        Xspeed2 = -5;
+        Xspeed2 = -pokeObject2.speed;
     }
     if (moveRight2 && !moveLeft2) {
-        Xspeed2 = 5;
+        Xspeed2 = pokeObject2.speed;
     }
     if (!moveUp2 && !moveDown2) {
         Yspeed2 = 0;

@@ -1,9 +1,33 @@
 body {
+    display: flex;
+    flex-direction: column;
+    max-width: 1000px;
+    align-items: center;
     background-color: lightgreen;
     text-align: center;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue";
 }
 canvas {
     background: url(/images/pokeGameBackground.png);
     background-size: cover;
     border: 2px solid black;
+}
+.score {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+        sans-serif;
+    font-size: 2rem;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+.health-player1,
+.health-player2 {
+}
+.health-player1 {
+    right: auto;
+}
+.health-player2 {
+    left: auto;
 }
