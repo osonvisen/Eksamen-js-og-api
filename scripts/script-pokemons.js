@@ -3,7 +3,7 @@
 // Finner alle pokemons fra apiet og leggerer de i en liste
 let pokemons = []; // Her lagrer vi de ferdige pokemons, som skal være vårt 'api'
 let pokeContainer = []; // Mellomlager
-let favorites = []; // Her lagrer vi de favorittene brukeren har valgt
+let favourites = []; // Her lagrer vi de favorittene brukeren har valgt
 let maxFavourites = 5; // Her definerer vi hvor mange favoritter vi kan ha
 let types = []; // Her lagrer vi typene vi henter ut
 let display = document.querySelector(".display");
@@ -50,8 +50,8 @@ function readLocalStorage() {
         pokemons = JSON.parse(localStorage.getItem("storedPokemons"));
         findTypes();
         showAllPokemons(pokemons, display);
-        if (localStorage.getItem("storedFavorites")) {
-            favorites = JSON.parse(localStorage.getItem("storedFavorites"));
+        if (localStorage.getItem("storedFavourites")) {
+            favourites = JSON.parse(localStorage.getItem("storedFavourites"));
             renderFavourites();
         } else {
             console.log("Ingen favoritter funnet i localStorage");
@@ -188,6 +188,7 @@ function renderPokemons(sortedArray, sorted) {
         destination = display;
         edit = true;
     }
+    // Lager ikonene man kan velge typene
     if (sorted) {
         showIcons.innerHTML = "";
         const sortIcons = document.createElement("div");
@@ -290,8 +291,10 @@ function renderPokemons(sortedArray, sorted) {
             // Først finner vi indexen  i  pokemons
             let deleteIndex = pokemons.indexOf(pokemon);
 
-            if (destination === selectedFavourites) {
-                favorites.splice(index, 1);
+            if (sortedArray === favourites) {
+                console.log("kom vi inn?" + index);
+                favourites.splice(index, 1);
+                storePokemons(favourites, "storedFavourites");
                 renderFavourites();
             } else {
                 if (sorted) {
@@ -299,7 +302,8 @@ function renderPokemons(sortedArray, sorted) {
                     deletePokemon(deleteIndex);
                     renderPokemons(sortedArray, sorted);
                 } else {
-                    deletePokemon(deleteIndex);
+                    pokemons.splice(index, 1);
+                    storePokemons(pokemons, "storedPokemons");
                     showAllPokemons();
                 }
             }
@@ -309,7 +313,7 @@ function renderPokemons(sortedArray, sorted) {
             const likeBtn = document.createElement("button");
             likeBtn.innerHTML = "Liker";
             likeBtn.addEventListener("click", () => {
-                if (favorites.length >= maxFavourites) {
+                if (favourites.length >= maxFavourites) {
                     alert(
                         "Du kan bare ha " +
                             maxFavourites +
@@ -317,12 +321,12 @@ function renderPokemons(sortedArray, sorted) {
                     );
                 } else {
                     // Sjekker om pokemonen allerede finnes i favourites
-                    if (favorites.some((fav) => fav.name === pokemon.name)) {
+                    if (favourites.some((fav) => fav.name === pokemon.name)) {
                         alert("Pokemonen er allerede en favoritt!");
                     } else {
                         pokemon.fav = true;
-                        favorites.push(pokemon);
-                        storePokemons(favorites, "storedFavorites");
+                        favourites.push(pokemon);
+                        storePokemons(favourites, "storedFavourites");
                         renderFavourites();
                     }
                 }
@@ -394,7 +398,7 @@ function deletePokemon(index) {
 // redigering og liker. Bruker parameteret false til dette.
 function renderFavourites() {
     selectedFavourites.innerHTML = "";
-    renderPokemons(favorites, false); // false fordi dette er ikke en sortert liste
+    renderPokemons(favourites, false); // false fordi dette er ikke en sortert liste
 }
 
 function makeNewPokemon() {
