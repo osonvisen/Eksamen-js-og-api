@@ -9,7 +9,7 @@ let types = []; // Her lagrer vi typene vi henter ut
 let display = document.querySelector(".display");
 let sortMenu = document.querySelector("#sort-type");
 let selectedFavourites = document.querySelector(".selected-favourites");
-const newPokemonBtn = document.querySelector(".create-new-pokemon");
+const newPokemonBtn = document.querySelector(".new-pokemon-btn");
 let createNewPokemon = document.querySelector(".make-new-pokemon");
 let showIcons = document.querySelector(".show-icons");
 
@@ -201,10 +201,14 @@ function renderPokemons(sortedArray, sorted) {
         iconImg.style.width = "50px";
         const iconName = document.createElement("div");
         iconName.innerHTML = "Alle";
-        iconImg.onclick = showAllPokemons;
+        iconImg.addEventListener("click", () => {
+            sortMenu.value = "";
+            showAllPokemons();
+        });
         iconDiv.append(iconImg, iconName);
         sortIcons.appendChild(iconDiv);
         types.forEach((type) => {
+            // Vi kan bare sortere på de typene vi har i db
             const iconDiv = document.createElement("div");
             iconDiv.style.marginRight = "8px";
             const iconImg = document.createElement("img");
@@ -353,7 +357,6 @@ function renderPokemons(sortedArray, sorted) {
                         color: findRandomColor(typeValue.value),
                         icon: `../images/icons/${typeValue.value}.ico`,
                     };
-
                     pokemon.name = editName.value;
                     pokemon.type = typeValue;
                     nameValue.innerHTML = editName.value;
@@ -403,12 +406,19 @@ function makeNewPokemon() {
     newName.placeholder = "Navn på ny pokemon";
 
     const newType = document.createElement("div");
+    newType.id = "sort-new";
+    const labelType = document.createElement("label");
+    labelType.for = "sort-new";
 
     const typeOption = document.createElement("select");
     const option = document.createElement("option");
-    newType.innerHTML = "";
-    option.value = "";
-    option.innerHTML = "Velg type";
+    if (sortMenu.value == "") {
+        option.value = "";
+        option.innerHTML = "Velg type";
+    } else {
+        option.value = sortMenu.value;
+        option.innerHTML = sortMenu.value;
+    }
     typeOption.appendChild(option);
     allPokemonTypes.forEach((type) => {
         const option = document.createElement("option");
@@ -426,6 +436,7 @@ function makeNewPokemon() {
     cancelBtn.addEventListener("click", () => {
         newCard.innerHTML = "";
         newPokemonBtn.style.display = "block";
+        sortPokemons(sortMenu.value);
     });
     const addBtn = document.createElement("button");
     addBtn.innerHTML = "Legg til";
