@@ -1,3 +1,6 @@
+// Lager arrayet med spillerne våre. Jeg har forhåndsvalgt
+// 4 pokemoner, som jeg henter ut statsene for fra apiet.
+// Bildene er hentet fra https://www.stickpng.com/search?q=pokemon
 let pokemons = [
     {
         name: "Pikachu",
@@ -24,42 +27,64 @@ let pokemons = [
         image: "../../images/bulbasaur-right.png",
     },
 ];
-// Fetcher stats fra api og legger inn i pokemons
-// som er de vi kan velge mellom i spillet.
-pokemons.forEach(async (pokemon) => {
-    const urlApi = `https://pokeapi.co/api/v2/pokemon/${pokemon.name.toLowerCase()}`;
-    try {
-        const response = await fetch(urlApi);
-        const data = await response.json();
-        pokemon.health = Math.round(data.stats[0].base_stat);
-        pokemon.attack = Math.round(data.stats[1].base_stat / 5);
-        pokemon.speed = Math.round(data.stats[5].base_stat / 10);
-    } catch (error) {
-        console.error("Kunne ikke laste pokemoner!" + error);
-    }
-});
-// Definerer områder som vi skal kunne kontrollere
-const playArea = document.querySelector(".play-area");
-const health1 = document.querySelector(".health1");
-const health2 = document.querySelector(".health2");
-const score = document.querySelector(".score");
-const attribution = document.querySelector(".attribution");
-
 // Setter variabler vi trenger
 let player1choise;
 let player2choise;
-let chosingPlayer = 1; // Setter at spiller 1 er første
+let chosingPlayer = 1; // Setter at spiller 1 er første til å velge
+let player1wins = 0;
+let player2wins = 0;
+// Så sjekker vi om det finnes noe i localStorage
+// og laster inn det som finnes der. Hvis ikke, starter fetchen.
+readLocalStorage();
+function readLocalStorage() {
+    if (localStorage.getItem("players")) {
+        pokemons = JSON.parse(localStorage.getItem("players"));
+        setTimeout(chosePlayer, 250);
+    } else {
+        fetchPokemonPlayers();
+    }
+    if (localStorage.getItem("wins")) {
+        let wins = JSON.parse(localStorage.getItem("wins"));
+        player1wins = wins.player1;
+        player2wins = wins.player2;
+    }
+}
+// Lagrer til localStorage når det trengs
+function storePokemons() {
+    localStorage.setItem("players", JSON.stringify(pokemons));
+    chosePlayer();
+}
+// Fetcher stats fra api og legger inn i pokemons
+// som er de vi kan velge mellom i spillet.
+function fetchPokemonPlayers() {
+    pokemons.forEach(async (pokemon) => {
+        const urlApi = `https://pokeapi.co/api/v2/pokemon/${pokemon.name.toLowerCase()}`;
+        try {
+            const response = await fetch(urlApi);
+            const data = await response.json();
+            pokemon.health = Math.round(data.stats[0].base_stat);
+            pokemon.attack = Math.round(data.stats[1].base_stat / 5);
+            pokemon.speed = Math.round(data.stats[5].base_stat / 10);
+            setTimeout(storePokemons, 200);
+        } catch (error) {
+            console.error("Kunne ikke laste pokemoner!" + error);
+        }
+    });
+}
+// Definerer områder som vi skal kunne kontrollere
+const playArea = document.querySelector(".play-area");
+const scores = document.querySelector(".scores");
+const attribution = document.querySelector(".attribution");
 
 // Skjuler noen elementer foreløpig
-score.style.visibility = "hidden";
+scores.style.visibility = "hidden";
 attribution.style.visibility = "hidden";
 
-setTimeout(chosePlayer, 200);
 function chosePlayer() {
     playArea.innerHTML = "";
     const viewPokemons = document.createElement("div"); // Inneholder alle pokemonene vi kan velge mellom
     const choseDiv = document.createElement("div");
-    choseDiv.innerHTML = `<h2>Velg pokemon for spiller ${chosingPlayer}</h2>`;
+    choseDiv.innerHTML = `<h2>Velg en pokemon for spiller ${chosingPlayer}</h2>`;
 
     const container = document.createElement("div");
     container.style.display = "flex";
@@ -71,6 +96,9 @@ function chosePlayer() {
 
     pokemons.forEach((pokemon, index) => {
         const pokemonDiv = document.createElement("div");
+        if (chosingPlayer === 2 && index == player1choise) {
+            return;
+        }
         pokemonDiv.style.display = "flex";
         pokemonDiv.style.flexDirection = "column";
         const imageDiv = document.createElement("div");
@@ -102,14 +130,14 @@ function chosePlayer() {
 function nextPlayer() {
     playArea.innerHTML = "";
     chosingPlayer++;
-    setTimeout(chosePlayer, 400);
+    setTimeout(chosePlayer, 250);
 }
 // setTimeout(theGame, 500);
 function theGame() {
     // Setter alle startvariabler
     // chosingPlayer--; // Setter denne tilbake før neste spill
     playArea.innerHTML = "";
-    score.style.visibility = "visible";
+    scores.style.visibility = "visible";
     attribution.style.visibility = "visible";
     let Xspeed1 = 0;
     let Yspeed1 = 0;
@@ -126,14 +154,7 @@ function theGame() {
     let moveDown2 = false;
 
     let attackPossible = false; // Det er bare mulig å angripe når man berører hverandre
-    let health1Status = pokemons[player1choise].health;
-    let health2Status = pokemons[player2choise].health;
-    function healthStatus() {
-        // Oppdaterer helsestatusen
-        console.log("Her skjedde det noe!");
-    }
-    health1.innerHTML = `${pokemons[player1choise].health} / ${health1Status}`;
-    health2.innerHTML = `${pokemons[player2choise].health} / ${health2Status}`;
+
     // Setter opp brettet
     let canvas = document.createElement("canvas");
     canvas.width = 1000;
@@ -150,6 +171,8 @@ function theGame() {
         attack: pokemons[player1choise].attack,
         health: pokemons[player1choise].health,
         name: pokemons[player1choise].name,
+        image: pokemons[player1choise].image,
+        healthBar: document.querySelector(".life-player-1"),
     };
     let playerObject2 = {
         x: 0,
@@ -160,6 +183,8 @@ function theGame() {
         attack: pokemons[player2choise].attack,
         health: pokemons[player2choise].health,
         name: pokemons[player2choise].name,
+        image: pokemons[player2choise].image,
+        healthBar: document.querySelector(".life-player-2"),
     };
     let player1 = Object.create(playerObject1);
     player1.x = 100; // Startposisjon
@@ -180,8 +205,24 @@ function theGame() {
         player2choise
     ].name.toLowerCase()}-left.png`;
 
+    // Skriver ut informasjon
+    const totalLife1 = document.querySelector(".total-life-1");
+    const totalLife2 = document.querySelector(".total-life-2");
+    const player1Name = document.querySelector(".player1-name");
+    const player2Name = document.querySelector(".player2-name");
+    const wins1 = document.querySelector(".wins-1");
+    const wins2 = document.querySelector(".wins-2");
+    totalLife1.innerHTML = player1.health;
+    totalLife2.innerHTML = player2.health;
+    player1.healthBar.innerHTML = player1.health;
+    player2.healthBar.innerHTML = player2.health;
+    player1Name.innerHTML = player1.name;
+    player2Name.innerHTML = player2.name;
+    wins1.innerHTML = `- Wins: ${player1wins}`;
+    wins2.innerHTML = `- Wins: ${player2wins}`;
     // Lytter etter tastetrykk
-    window.addEventListener("keydown", function (e) {
+    window.addEventListener("keydown", playerKeyDown);
+    function playerKeyDown(e) {
         switch (e.key) {
             // Bevegelser
             case "ArrowUp":
@@ -210,15 +251,18 @@ function theGame() {
                 break;
             // Så for angrep
             case "q":
-                attacks(player1.attack, player2.health);
+                // attacks(1, 2);
+                attacks(player1, player2);
                 break;
             case "-":
-                attacks(player2.name, player1.name);
+                // attacks(2, 1);
+                attacks(player2, player1);
                 break;
         }
-    });
+    }
     // Lytter etter tasteslipp, altså når man slipper knappen
-    window.addEventListener("keyup", function (e) {
+    window.addEventListener("keyup", playerKeyUp);
+    function playerKeyUp(e) {
         switch (e.key) {
             case "ArrowUp":
                 moveUp2 = false;
@@ -245,7 +289,7 @@ function theGame() {
                 moveRight1 = false;
                 break;
         }
-    });
+    }
     // Følger med på knappene som trykkes og sender pokemonene i riktig retning
     function update() {
         // lager animasjonsloopen
@@ -344,7 +388,6 @@ function theGame() {
             player2.height // Samme for høyden, objektet kan få feil proporsjoner hvis disse står på feil posisjon
         );
     }
-
     function detectContact(playerObject1, playerObject2) {
         // Vi finner ut når spiller1 og spiller2 berører hverandre
         if (
@@ -361,10 +404,56 @@ function theGame() {
     function attacks(attacker, defender) {
         // Når en av spillerne angriper:
         if (attackPossible) {
-            console.log(attacker + " angrep " + defender);
+            updateHealth(attacker, defender);
         }
     }
-    function gameOver() {
-        window.location.reload();
+    function updateHealth(attacker, defender) {
+        defender.healthBar.innerHTML = defender.health -= attacker.attack;
+        checkIfAlive(attacker, defender);
     }
+    function checkIfAlive(attacker, defender) {
+        if (defender.health <= 0) {
+            gameOver(attacker, defender);
+        }
+    }
+    function gameOver(attacker, defender) {
+        if (attacker.name == playerObject1.name) {
+            player1wins++;
+            wins1.innerHTML = player1wins;
+        } else if (attacker.name == playerObject2.name) {
+            player2wins++;
+            wins2.innerHTML = player2wins;
+        }
+        saveWins();
+        console.log(defender.name + " døde av angrepet fra " + attacker.name);
+        defender.healthBar.innerHTML = "0";
+        window.removeEventListener("keydown", playerKeyDown);
+        window.removeEventListener("keyup", playerKeyUp);
+        attackPossible = false;
+        player1 = "";
+        player2 = "";
+        playArea.innerHTML = "";
+        attribution.style.visibility = "hidden";
+        const winnerDiv = document.createElement("div");
+        const winner = document.createElement("img");
+        winner.src = attacker.image;
+        const winnerText = document.createElement("div");
+        winnerText.innerHTML = `Spiller ${attacker.name} har vunnet!`;
+
+        const playAgainBtn = document.createElement("button");
+        playAgainBtn.textContent = "Spill en runde til!";
+        playAgainBtn.addEventListener("click", startAgain);
+        winnerDiv.append(winner, winnerText, playAgainBtn);
+        playArea.appendChild(winnerDiv);
+    }
+}
+function startAgain() {
+    window.location.reload();
+}
+function saveWins() {
+    let wins = {
+        player1: player1wins,
+        player2: player2wins,
+    };
+    localStorage.setItem("wins", JSON.stringify(wins));
 }
