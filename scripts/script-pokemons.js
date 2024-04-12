@@ -154,15 +154,15 @@ function findTypes() {
             types.push(pokemon.type);
         }
     });
-    dropDownMenu(types);
+    dropDownMenu();
 }
-function dropDownMenu(array) {
+function dropDownMenu() {
     sortMenu.innerHTML = "";
     const option = document.createElement("option");
     option.value = "";
     option.textContent = "alle";
     sortMenu.appendChild(option);
-    array.forEach((type) => {
+    types.forEach((type) => {
         const option = document.createElement("option");
         option.value = type;
         option.textContent = type;
@@ -340,10 +340,13 @@ function renderPokemons(sortedArray, sorted) {
                 const editName = document.createElement("input");
                 editName.value = pokemon.name;
                 nameValue.innerHTML = "";
+
                 const storeEditBtn = document.createElement("button");
                 storeEditBtn.innerHTML = "Lagre endringene";
                 storeEditBtn.style.marginTop = "5px";
+
                 const typeOptions = document.createElement("select");
+                const option = document.createElement("option");
                 allPokemonTypes.forEach((type) => {
                     const option = document.createElement("option");
                     typeValue.innerHTML = "";
@@ -354,24 +357,30 @@ function renderPokemons(sortedArray, sorted) {
                         typeValue.value = typeOptions.value;
                     });
                 });
+                typeOptions.value = pokemon.type;
                 storeEditBtn.addEventListener("click", () => {
-                    pokemons[index] = {
-                        type: typeValue.value,
-                        image: pokemon.image,
-                        name: pokemon.name,
-                        color: findRandomColor(typeValue.value),
-                        icon: `../images/icons/${typeValue.value}.ico`,
-                    };
-                    pokemon.name = editName.value;
-                    pokemon.type = typeValue;
-                    nameValue.innerHTML = editName.value;
-                    typeValue.innerHTML = typeValue.value;
-                    pokemons[index].type = typeValue.value;
-                    pokemons[
-                        index
-                    ].icon = `../images/icons/${typeValue.value}.ico`;
-                    storePokemons(pokemons, "storedPokemons");
-                    showAllPokemons();
+                    if (editName.value == "") {
+                        alert("Du må skrive inn et navn!");
+                        editName.value = pokemon.name;
+                    } else {
+                        let favoritt = favourites.findIndex(
+                            (fav) => fav.name == pokemon.name
+                        );
+                        pokemons[index] = {
+                            type: typeOptions.value,
+                            image: pokemon.image,
+                            name: editName.value,
+                            color: findRandomColor(typeOptions.value),
+                            icon: `../images/icons/${typeOptions.value}.ico`,
+                        };
+                        if (favoritt != -1) {
+                            favourites[favoritt] = pokemons[index];
+                            storePokemons(favourites, "storedFavourites");
+                            storePokemons(pokemons, "storedPokemons");
+                            showAllPokemons();
+                            renderFavourites();
+                        }
+                    }
                 });
                 typeDiv.appendChild(storeEditBtn);
                 typeValue.appendChild(typeOptions);
@@ -424,12 +433,12 @@ function makeNewPokemon() {
     if (sortMenu.value == "") {
         option.value = "";
         option.innerHTML = "Velg type";
+        typeOption.append(option);
     } else {
-        option.value = sortMenu.value;
-        newType.value = option.value;
-        option.innerHTML = newType.value;
+        // option.value = sortMenu.value;
+        // newType.value = option.value;
+        // option.innerHTML = newType.value;
     }
-    typeOption.appendChild(option);
     allPokemonTypes.forEach((type) => {
         const option = document.createElement("option");
         option.value = type;
@@ -439,6 +448,9 @@ function makeNewPokemon() {
             newType.value = typeOption.value;
         });
     });
+    typeOption.appendChild(option);
+    typeOption.value = sortMenu.value;
+
     newType.appendChild(typeOption);
     const cancelBtn = document.createElement("button");
     cancelBtn.innerHTML = "Avbryt";
