@@ -363,7 +363,6 @@ function theGame() {
         }
         // Sjekker om pokemonene er i kontakt med hverandre
         if (detectContact(playerObject1, playerObject2)) {
-            console.log("Angrep");
             attackPossible = true;
         }
         render();
@@ -424,7 +423,6 @@ function theGame() {
             wins2.innerHTML = `Wins: ${player2wins}`;
         }
         saveWins();
-        console.log(defender.name + " døde av angrepet fra " + attacker.name);
         defender.healthBar.innerHTML = "0";
         window.removeEventListener("keydown", playerKeyDown);
         window.removeEventListener("keyup", playerKeyUp);
