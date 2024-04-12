@@ -1,6 +1,11 @@
 // Lager arrayet med spillerne våre. Jeg har forhåndsvalgt
 // 4 pokemoner, som jeg henter ut statsene for fra apiet.
 // Bildene er hentet fra https://www.stickpng.com/search?q=pokemon
+// Inspirasjon har jeg fått fra Anders, som lærte oss om canvas og hvordan vi kunne manipulere dette,
+// samt et par videoer https://www.youtube.com/watch?v=LTtfoyHxAVU
+// av en som koder spillet pong, og https://www.youtube.com/watch?v=Cali4HZF7TY, hvor
+// man flytter et objekt rundt i et canvas. Jeg har også brukt chatGPT til å komme med forslag til løsninger
+// men jeg har ikke brukt kode direkte derfra.
 let pokemons = [
     {
         name: "Pikachu",
@@ -63,7 +68,7 @@ function fetchPokemonPlayers() {
             const response = await fetch(urlApi);
             const data = await response.json();
             pokemon.health = Math.round(data.stats[0].base_stat);
-            pokemon.attack = Math.round(data.stats[1].base_stat / 5);
+            pokemon.attack = Math.round(data.stats[1].base_stat / 5); // Tilpasser statsene til spillet
             pokemon.speed = Math.round(data.stats[5].base_stat / 10);
             setTimeout(storePokemons, 200);
         } catch (error) {
@@ -111,12 +116,10 @@ function chosePlayer() {
         pokemonDiv.append(imageDiv, textDiv);
         container.append(pokemonDiv);
         viewPokemons.append(choseDiv, container);
-
         image.addEventListener("click", (event) => {
             image.removeEventListener("click", (event) => {});
             if (chosingPlayer === 1) {
                 player1choise = index;
-
                 nextPlayer();
             } else if (chosingPlayer === 2) {
                 player2choise = index;
@@ -124,7 +127,6 @@ function chosePlayer() {
             }
         });
     });
-
     playArea.append(viewPokemons);
 }
 function nextPlayer() {
@@ -145,16 +147,13 @@ function theGame() {
     let moveRight1 = false;
     let moveUp1 = false;
     let moveDown1 = false;
-
     let Xspeed2 = 0;
     let Yspeed2 = 0;
     let moveLeft2 = false;
     let moveRight2 = false;
     let moveUp2 = false;
     let moveDown2 = false;
-
     let attackPossible = false; // Det er bare mulig å angripe når man berører hverandre
-
     // Setter opp brettet
     let canvas = document.createElement("canvas");
     canvas.width = 1000;
