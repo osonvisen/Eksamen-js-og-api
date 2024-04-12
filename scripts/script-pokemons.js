@@ -54,9 +54,11 @@ function readLocalStorage() {
         }
     } else {
         catchEmAll();
+        fetchPokemonTypes();
     }
 }
 async function fetchPokemonTypes() {
+    console.log("Vi må hente inn alle typene!");
     try {
         const response = await fetch("https://pokeapi.co/api/v2/type");
         const data = await response.json();
