@@ -373,13 +373,21 @@ function renderPokemons(sortedArray, sorted) {
                             color: findRandomColor(typeOptions.value),
                             icon: `../images/icons/${typeOptions.value}.ico`,
                         };
+
                         if (favoritt != -1) {
-                            favourites[favoritt] = pokemons[index];
-                            storePokemons(favourites, "storedFavourites");
-                            storePokemons(pokemons, "storedPokemons");
-                            showAllPokemons();
+                            favourites[favoritt] = {
+                                fav: true,
+                                type: typeOptions.value,
+                                image: pokemon.image,
+                                name: editName.value,
+                                color: findRandomColor(typeOptions.value),
+                                icon: `../images/icons/${typeOptions.value}.ico`,
+                            };
                             renderFavourites();
                         }
+                        //
+                        storePokemons(pokemons, "storedPokemons");
+                        showAllPokemons();
                     }
                 });
                 typeDiv.appendChild(storeEditBtn);
