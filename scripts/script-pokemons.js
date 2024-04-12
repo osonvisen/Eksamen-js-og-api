@@ -42,6 +42,12 @@ function readLocalStorage() {
         } else {
             console.log("Ingen favoritter funnet i localStorage");
         }
+        if (localStorage.getItem("allTypes")) {
+            allPokemonTypes = JSON.parse(localStorage.getItem("allTypes"));
+        } else {
+            console.log("Ingen typer funnet i localStorage!");
+            fetchPokemonTypes();
+        }
     } else {
         catchEmAll();
     }
@@ -52,7 +58,8 @@ async function fetchPokemonTypes() {
         const data = await response.json();
         allPokemonTypes = data.results.map((type) => type.name);
         allPokemonTypes.splice(18, 2); // Fjerner de to siste typene
-        readLocalStorage();
+        storePokemons(allPokemonTypes, "allTypes");
+        // readLocalStorage();
     } catch (error) {
         console.error("Får ikke lastet ned pokemons..! " + error);
     }
@@ -123,9 +130,6 @@ function storePokemons(array, key) {
     if (array === undefined) {
         console.log("Mottok ingen array");
     } else {
-        if (key === undefined && array.length > 6) {
-            key = "storedPokemons";
-        }
         localStorage.setItem(key, JSON.stringify(array));
     }
 }
@@ -142,6 +146,7 @@ function findTypes() {
             types.push(pokemon.type);
         }
     });
+
     dropDownMenu();
 }
 function dropDownMenu() {
@@ -158,7 +163,6 @@ function dropDownMenu() {
     });
 }
 sortMenu.addEventListener("change", () => {
-    console.log(sortMenu.value);
     if (sortMenu.value == "") {
         showAllPokemons();
     } else {
@@ -175,8 +179,6 @@ function sortPokemons(type) {
 // hvor vi skal skrive ut, om de skal ha liker- og redigerknapper
 // samt om dette er en sortert liste.
 function renderPokemons(sortedArray, sorted) {
-    console.log(sortedArray);
-
     if (sortedArray[0].fav) {
         destination = selectedFavourites;
         edit = false;
@@ -217,14 +219,12 @@ function renderPokemons(sortedArray, sorted) {
             iconDiv.append(iconImg, iconName);
             sortIcons.appendChild(iconDiv);
             iconImg.addEventListener("click", (event) => {
-                console.log(type);
                 sortPokemons(type);
             });
         });
         showIcons.append(sortIcons);
     }
     destination.innerHTML = "";
-    console.log(destination);
     sortedArray.forEach((pokemon, index) => {
         const pokemonCard = document.createElement("div");
         pokemonCard.style.display = "flex";
@@ -314,7 +314,6 @@ function renderPokemons(sortedArray, sorted) {
                     if (favourites.some((fav) => fav.name === pokemon.name)) {
                         alert("Pokemonen er allerede en favoritt!");
                     } else {
-                        console.log(pokemon.name);
                         const newFavourite = {
                             color: pokemon.color,
                             icon: pokemon.icon,
@@ -398,17 +397,15 @@ function renderFavourites() {
 }
 function makeNewPokemon() {
     newPokemonBtn.style.display = "none";
-    const newCard = document.createElement("div");
-    const image = "./images/default.png";
+    // Lager den nye pokemonen
+    const pokemon = document.createElement("div");
+    const image = document.createElement("div");
+    image.innerHTML = `<img src='${./images/default.png}' /img>`;
     const newName = document.createElement("input");
     newName.type = "text";
     newName.placeholder = "Navn på ny pokemon";
 
     const newType = document.createElement("div");
-    newType.id = "sort-new";
-    const labelType = document.createElement("label");
-    labelType.for = "sort-new";
-
     const typeOption = document.createElement("select");
     const option = document.createElement("option");
     if (sortMenu.value == "") {
@@ -433,7 +430,7 @@ function makeNewPokemon() {
     const cancelBtn = document.createElement("button");
     cancelBtn.innerHTML = "Avbryt";
     cancelBtn.addEventListener("click", () => {
-        newCard.innerHTML = "";
+        pokemon.innerHTML = "";
         newPokemonBtn.style.display = "block";
         if (sorted) {
             sortPokemons(sortMenu.value);
@@ -451,13 +448,14 @@ function makeNewPokemon() {
             newType.value == undefined
         ) {
             alert("Du må fylle inn alle feltene");
+        } else if (pokemons.includes(newName.value)) {
+            alert("Navnet finnes allerede. Du må lage et nytt!");
         } else {
-            console.log(newType.value);
             let bgColor = findRandomColor(newType.value);
             const newPokemon = {
                 name: newName.value,
                 type: newType.value,
-                image: image,
+                image: image.value,
                 color: bgColor,
                 icon: `../images/icons/${newType.value}.ico`,
             };
@@ -465,10 +463,10 @@ function makeNewPokemon() {
             storePokemons(pokemons, "storedPokemons");
             findTypes();
             showAllPokemons();
-            newCard.innerHTML = "";
+            pokemon.innerHTML = "";
             newPokemonBtn.style.display = "block";
         }
     });
-    newCard.append(newName, newType, addBtn, cancelBtn);
-    createNewPokemon.appendChild(newCard);
+    pokemon.append(newName, newType, addBtn, cancelBtn);
+    createNewPokemon.appendChild(pokemon);
 }
