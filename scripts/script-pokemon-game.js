@@ -418,10 +418,10 @@ function theGame() {
     function gameOver(attacker, defender) {
         if (attacker.name == playerObject1.name) {
             player1wins++;
-            wins1.innerHTML = player1wins;
+            wins1.innerHTML = `Wins: ${player1wins}`;
         } else if (attacker.name == playerObject2.name) {
             player2wins++;
-            wins2.innerHTML = player2wins;
+            wins2.innerHTML = `Wins: ${player2wins}`;
         }
         saveWins();
         console.log(defender.name + " døde av angrepet fra " + attacker.name);
