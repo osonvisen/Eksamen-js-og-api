@@ -32,7 +32,6 @@ newPokemonBtn.addEventListener("click", () => {
 readLocalStorage();
 function readLocalStorage() {
     if (localStorage.getItem("storedPokemons")) {
-        console.log("lastet inn fra localStorage");
         pokemons = JSON.parse(localStorage.getItem("storedPokemons"));
         findTypes();
         showAllPokemons();
@@ -40,13 +39,18 @@ function readLocalStorage() {
             favourites = JSON.parse(localStorage.getItem("storedFavourites"));
             renderFavourites();
         } else {
-            console.log("Ingen favoritter funnet i localStorage");
+            console.error("Ingen favoritter funnet i localStorage");
         }
         if (localStorage.getItem("allTypes")) {
             allPokemonTypes = JSON.parse(localStorage.getItem("allTypes"));
         } else {
-            console.log("Ingen typer funnet i localStorage!");
+            console.error("Ingen typer funnet i localStorage!");
             fetchPokemonTypes();
+        }
+        if (localStorage.getItem("colors")) {
+            predefinedColors = JSON.parse(localStorage.getItem("colors"));
+        } else {
+            console.error("Ingen predefinerte farger funnet i localStorage!");
         }
     } else {
         catchEmAll();
@@ -123,6 +127,7 @@ function findRandomColor(pokemonType) {
         // Vi legger til fargen i arrayet med predefinerte farger
         // sånn at nye pokemons med samme type får lik farge
         predefinedColors[pokemonType] = bgColor;
+        storePokemons(predefinedColors, "colors");
         return bgColor;
     }
 }
@@ -179,12 +184,13 @@ function sortPokemons(type) {
 // hvor vi skal skrive ut, om de skal ha liker- og redigerknapper
 // samt om dette er en sortert liste.
 function renderPokemons(sortedArray, sorted) {
-    if (sortedArray[0].fav) {
-        destination = selectedFavourites;
-        edit = false;
-    } else {
+    if (sortedArray[0].fav == undefined) {
+        console.log("Fav er undefinded");
         destination = display;
         edit = true;
+    } else {
+        destination = selectedFavourites;
+        edit = false;
     }
     // Lager ikonene man kan velge typene
     if (sorted) {
@@ -289,11 +295,11 @@ function renderPokemons(sortedArray, sorted) {
                 renderFavourites();
             } else {
                 if (sorted) {
-                    sortedArray.splice(index, 1);
+                    sortedArray.splice(index);
                     deletePokemon(deleteIndex);
                     renderPokemons(sortedArray, sorted);
                 } else {
-                    pokemons.splice(index, 1);
+                    deletePokemon(index, 1);
                     storePokemons(pokemons, "storedPokemons");
                     showAllPokemons();
                 }
@@ -386,8 +392,17 @@ function renderPokemons(sortedArray, sorted) {
     });
 }
 function deletePokemon(index) {
+    let favIndex = favourites.findIndex(
+        (pokemon) => pokemon.name == pokemons[index].name
+    );
+    if (favIndex != -1) {
+        favourites.splice(favIndex, 1);
+        storePokemons(favourites, "storedFavourites");
+        renderFavourites();
+    }
     pokemons.splice(index, 1);
     storePokemons(pokemons, "storedPokemons");
+    showAllPokemons();
 }
 // Når vi skal vise favorittene, så trenger vi ikke knappene for
 // redigering og liker. Bruker parameteret false til dette.
@@ -399,8 +414,7 @@ function makeNewPokemon() {
     newPokemonBtn.style.display = "none";
     // Lager den nye pokemonen
     const pokemon = document.createElement("div");
-    const image = document.createElement("div");
-    image.innerHTML = `<img src='${./images/default.png}' /img>`;
+    const image = "./images/default.png";
     const newName = document.createElement("input");
     newName.type = "text";
     newName.placeholder = "Navn på ny pokemon";
@@ -432,7 +446,7 @@ function makeNewPokemon() {
     cancelBtn.addEventListener("click", () => {
         pokemon.innerHTML = "";
         newPokemonBtn.style.display = "block";
-        if (sorted) {
+        if (sortMenu.value !== "") {
             sortPokemons(sortMenu.value);
         } else {
             showAllPokemons();
@@ -448,23 +462,33 @@ function makeNewPokemon() {
             newType.value == undefined
         ) {
             alert("Du må fylle inn alle feltene");
-        } else if (pokemons.includes(newName.value)) {
-            alert("Navnet finnes allerede. Du må lage et nytt!");
         } else {
-            let bgColor = findRandomColor(newType.value);
-            const newPokemon = {
-                name: newName.value,
-                type: newType.value,
-                image: image.value,
-                color: bgColor,
-                icon: `../images/icons/${newType.value}.ico`,
-            };
-            pokemons.push(newPokemon);
-            storePokemons(pokemons, "storedPokemons");
-            findTypes();
-            showAllPokemons();
-            pokemon.innerHTML = "";
-            newPokemonBtn.style.display = "block";
+            let funnet = false;
+            pokemons.forEach((poke) => {
+                if (poke.name == newName.value) {
+                    alert("Navnet finnes allerede! Du må lage et nytt!");
+                    funnet = true;
+                }
+            });
+            if (funnet) {
+                alert("Navnet finnes allerede. Du må lage et nytt!");
+                newName.value = "";
+            } else {
+                let bgColor = findRandomColor(newType.value);
+                const newPokemon = {
+                    name: newName.value.toLocaleLowerCase(),
+                    type: newType.value,
+                    image: image,
+                    color: bgColor,
+                    icon: `../images/icons/${newType.value}.ico`,
+                };
+                pokemons.push(newPokemon);
+                storePokemons(pokemons, "storedPokemons");
+                findTypes();
+                showAllPokemons();
+                pokemon.innerHTML = "";
+                newPokemonBtn.style.display = "block";
+            }
         }
     });
     pokemon.append(newName, newType, addBtn, cancelBtn);
