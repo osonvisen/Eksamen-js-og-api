@@ -1,19 +1,11 @@
 // Hentet pokemon-ikoner fra http://www.rw-designer.com/icon-set/pokemon-types
 // Finner alle pokemons fra apiet og leggerer de i en liste
-let pokemons = []; // Her lagrer vi de ferdige pokemons, som skal være vårt 'api'
+let pokemons = []; // Her lagrer vi de ferdige pokemons, som skal være vår database (db)
 let pokeContainer = []; // Mellomlager
 let favourites = []; // Her lagrer vi de favorittene brukeren har valgt
 let maxFavourites = 5; // Her definerer vi hvor mange favoritter vi kan ha
-let types = []; // Her lagrer vi typene vi henter ut
-let display = document.querySelector(".display");
-let sortMenu = document.querySelector("#sort-type");
-let selectedFavourites = document.querySelector(".selected-favourites");
-const newPokemonBtn = document.querySelector(".new-pokemon-btn");
-let createNewPokemon = document.querySelector(".make-new-pokemon");
-let showIcons = document.querySelector(".show-icons");
-// Jeg predefinerer noen farger for noen typer pokemons.
-// Tanken er at vi kan legge til nye farger når en ny
-// pokemontype legges til.
+let types = []; // Her lagrer vi typene til de pokemonene vil har lasta ned.
+let allPokemonTypes = []; // Her lagres alle 18 typene
 let predefinedColors = {
     water: "rgb(0, 191, 255)",
     fire: "rgb(255, 0, 0)",
@@ -22,9 +14,17 @@ let predefinedColors = {
     poison: "rgb(128, 0, 128)",
     bug: "rgb(255, 128, 0)",
     fairy: "rgb(255, 255, 255)",
-};
-// Fetcher pokemontypene fra apiet
-let allPokemonTypes = [];
+}; // Jeg har foråndsdefinert noen farger, mens resten av fargene genereres automatisk
+// etterhvert som vi legger til nye typer i db
+// De delene av skjermen vi skal styre
+let display = document.querySelector(".display");
+let sortMenu = document.querySelector("#sort-type");
+let selectedFavourites = document.querySelector(".selected-favourites");
+const newPokemonBtn = document.querySelector(".new-pokemon-btn");
+let createNewPokemon = document.querySelector(".make-new-pokemon");
+let showIcons = document.querySelector(".show-icons");
+
+// Eventlistener for Lag ny pokemon-knappen
 newPokemonBtn.addEventListener("click", () => {
     makeNewPokemon();
 });
@@ -39,26 +39,26 @@ function readLocalStorage() {
             favourites = JSON.parse(localStorage.getItem("storedFavourites"));
             renderFavourites();
         } else {
-            console.error("Ingen favoritter funnet i localStorage");
+            console.log("Ingen favoritter funnet i localStorage");
         }
         if (localStorage.getItem("allTypes")) {
             allPokemonTypes = JSON.parse(localStorage.getItem("allTypes"));
         } else {
-            console.error("Ingen typer funnet i localStorage!");
+            console.log("Ingen typer funnet i localStorage!");
             fetchPokemonTypes();
         }
         if (localStorage.getItem("colors")) {
             predefinedColors = JSON.parse(localStorage.getItem("colors"));
         } else {
-            console.error("Ingen predefinerte farger funnet i localStorage!");
+            console.log("Ingen predefinerte farger funnet i localStorage!");
         }
     } else {
         catchEmAll();
         fetchPokemonTypes();
     }
 }
+// Fetcher alle pokemontypene
 async function fetchPokemonTypes() {
-    console.log("Vi må hente inn alle typene!");
     try {
         const response = await fetch("https://pokeapi.co/api/v2/type");
         const data = await response.json();
@@ -70,7 +70,7 @@ async function fetchPokemonTypes() {
         console.error("Får ikke lastet ned pokemons..! " + error);
     }
 }
-// Fanger 50 tilfeldige pokemons
+// Fanger 50  pokemons
 async function catchEmAll() {
     let collection = []; // Her legger vi rådataene fra apiet
     try {
@@ -116,18 +116,18 @@ function buildPokemons() {
     setTimeout(findTypes, 300);
     setTimeout(showAllPokemons, 500);
 }
+// Finner en tilfeldig farge til de typene som ikke har predefinerte farger
 function findRandomColor(pokemonType) {
-    // Finner farge til en bakgrunn
-    // Vi kan forhåndsdefinere noen farger
     if (pokemonType in predefinedColors) {
         return predefinedColors[pokemonType];
     } else {
-        let r = Math.floor(Math.random() * 256);
-        let g = Math.floor(Math.random() * 256);
-        let b = Math.floor(Math.random() * 256);
+        let r = Math.floor(Math.random() * 205) + 50;
+        let g = Math.floor(Math.random() * 205) + 50;
+        let b = Math.floor(Math.random() * 205) + 50;
         const bgColor = "rgb(" + r + ", " + g + ", " + b + ")";
         // Vi legger til fargen i arrayet med predefinerte farger
         // sånn at nye pokemons med samme type får lik farge
+        // Så lagrer vi fargene, sånn at vi kan bruke de igjen senere
         predefinedColors[pokemonType] = bgColor;
         storePokemons(predefinedColors, "colors");
         return bgColor;
@@ -146,28 +146,29 @@ function showAllPokemons() {
     renderPokemons(pokemons, false); // false fordi denne er ikke sortert
 }
 function findTypes() {
-    // Lager et array med alle typene pokemons
+    // Lager et array med alle typene pokemons vi har i db
+    // Jeg gjør dette fordi vi bare kan sortere på eksisterende typer.
     types = [];
     pokemons.forEach((pokemon) => {
         if (!types.includes(pokemon.type)) {
             types.push(pokemon.type);
         }
     });
-
-    dropDownMenu();
+    dropDownMenu(types);
 }
-function dropDownMenu() {
+function dropDownMenu(array) {
     sortMenu.innerHTML = "";
     const option = document.createElement("option");
     option.value = "";
     option.textContent = "alle";
     sortMenu.appendChild(option);
-    types.forEach((type) => {
+    array.forEach((type) => {
         const option = document.createElement("option");
         option.value = type;
         option.textContent = type;
         sortMenu.append(option);
     });
+    return;
 }
 sortMenu.addEventListener("change", () => {
     if (sortMenu.value == "") {
@@ -183,11 +184,9 @@ function sortPokemons(type) {
     sortMenu.value = type;
 }
 // Vi mottar parametre for hvilket array vi skal skrive ut,
-// hvor vi skal skrive ut, om de skal ha liker- og redigerknapper
 // samt om dette er en sortert liste.
 function renderPokemons(sortedArray, sorted) {
     if (sortedArray[0].fav == undefined) {
-        console.log("Fav er undefinded");
         destination = display;
         edit = true;
     } else {
@@ -242,11 +241,9 @@ function renderPokemons(sortedArray, sorted) {
         pokemonCard.style.backgroundColor = pokemon.color;
         pokemonCard.style.padding = "7px";
         pokemonCard.style.borderRadius = "10px";
-
         const imgDiv = document.createElement("div");
         imgDiv.innerHTML = `<img src="${pokemon.image}" alt="${pokemon.name}" style="width: 150px">`;
         imgDiv.style.width = "100%";
-
         const typeIcon = document.createElement("div");
         typeIcon.style.display = "flex";
         typeIcon.style.position = "absolute";
@@ -297,7 +294,7 @@ function renderPokemons(sortedArray, sorted) {
                 renderFavourites();
             } else {
                 if (sorted) {
-                    sortedArray.splice(index);
+                    sortedArray.splice(index, 1);
                     deletePokemon(deleteIndex);
                     renderPokemons(sortedArray, sorted);
                 } else {
@@ -307,6 +304,7 @@ function renderPokemons(sortedArray, sorted) {
                 }
             }
         });
+        // Jeg velger at brukeren ikke kan redigere direkte fra favorittene
         if (edit) {
             const likeBtn = document.createElement("button");
             likeBtn.innerHTML = "Liker";
@@ -420,7 +418,6 @@ function makeNewPokemon() {
     const newName = document.createElement("input");
     newName.type = "text";
     newName.placeholder = "Navn på ny pokemon";
-
     const newType = document.createElement("div");
     const typeOption = document.createElement("select");
     const option = document.createElement("option");
