@@ -443,9 +443,6 @@ function makeNewPokemon() {
         option.innerHTML = "Velg type";
         typeOption.append(option);
     } else {
-        // option.value = sortMenu.value;
-        // newType.value = option.value;
-        // option.innerHTML = newType.value;
     }
     allPokemonTypes.forEach((type) => {
         const option = document.createElement("option");
@@ -477,8 +474,8 @@ function makeNewPokemon() {
         newPokemonBtn.style.display = "none";
         if (
             newName.value == "" ||
-            newType.value == "" ||
-            newType.value == undefined
+            typeOption.value == "" ||
+            typeOption.value == undefined
         ) {
             alert("Du må fylle inn alle feltene");
         } else {
@@ -493,13 +490,13 @@ function makeNewPokemon() {
                 alert("Navnet finnes allerede. Du må lage et nytt!");
                 newName.value = "";
             } else {
-                let bgColor = findRandomColor(newType.value);
+                let bgColor = findRandomColor(typeOption.value);
                 const newPokemon = {
                     name: newName.value.toLocaleLowerCase(),
-                    type: newType.value,
+                    type: typeOption.value,
                     image: image,
                     color: bgColor,
-                    icon: `../images/icons/${newType.value}.ico`,
+                    icon: `../images/icons/${typeOption.value}.ico`,
                 };
                 pokemons.push(newPokemon);
                 storePokemons(pokemons, "storedPokemons");
